@@ -4,6 +4,8 @@ import 'package:flutter_tutorial/login.dart';
 import 'package:flutter_tutorial/package_info.dart';
 import 'package:http/http.dart' as http;
 
+import 'nfc.dart';
+
 void main() => runApp(const MyApp());
 
 class MyApp extends StatelessWidget {

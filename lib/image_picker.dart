@@ -7,23 +7,17 @@ class ImagePickerPage extends StatefulWidget {
   const ImagePickerPage({super.key});
 
   @override
-  State<StatefulWidget> createState() {
-    return _ImagePickerState();
-  }
+  State<StatefulWidget> createState() => _ImagePickerState();
 }
 
 class _ImagePickerState extends State<ImagePickerPage> {
-  // 图片文件
   File? _image;
-
-  // 实例化
   final picker = ImagePicker();
+  var dio = Dio();
 
-  // 获取图片
   Future getImage() async {
     final pickedFile =
         await picker.pickImage(source: ImageSource.gallery, maxWidth: 800);
-    // 更新状态
     setState(() {
       if (pickedFile != null) {
         _image = File(pickedFile.path);
@@ -34,7 +28,6 @@ class _ImagePickerState extends State<ImagePickerPage> {
     });
   }
 
-  var dio = Dio();
   void uploadImg(imageUrl) async {
     FormData formData = FormData.fromMap(
         {"dept": "temp", "file": await MultipartFile.fromFile(imageUrl)});
@@ -53,7 +46,8 @@ class _ImagePickerState extends State<ImagePickerPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return MaterialApp(
+        home:Scaffold(
         appBar: AppBar(
           title: const Text("ImagePicker"),
         ),
@@ -81,7 +75,7 @@ class _ImagePickerState extends State<ImagePickerPage> {
             TextButton(
               onPressed: () {
                 _image?.deleteSync();
-                _image =null;
+                _image = null;
               },
               child: const Text("刪除照片"),
             ),
@@ -90,6 +84,6 @@ class _ImagePickerState extends State<ImagePickerPage> {
               child: _image == null ? const Text('沒有圖片') : Image.file(_image!),
             ),
           ],
-        )));
+        ))));
   }
 }

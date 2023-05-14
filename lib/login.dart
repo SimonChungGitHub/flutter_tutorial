@@ -1,5 +1,12 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:nfc_manager/nfc_manager.dart';
+
+import 'devide_info.dart';
+import 'image_picker.dart';
+import 'nfc.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({Key? key}) : super(key: key);
@@ -11,18 +18,81 @@ class LoginPage extends StatefulWidget {
 class _LoginPageState extends State<LoginPage> {
   TextEditingController usernameController = TextEditingController();
   TextEditingController passwordController = TextEditingController();
+  ValueNotifier<dynamic> result = ValueNotifier("");
+
+
+  @override
+  void initState() {
+    nfc();
+  }
+
+
+  @override
+  void dispose() {
+    super.dispose();
+    // await FlutterNfcKit.finish();
+    NfcManager.instance.stopSession();
+  }
+
+  void nfc() async {
+    bool isAvailable = await NfcManager.instance.isAvailable();
+    if (isAvailable) {
+      NfcManager.instance.startSession(
+        onDiscovered: (NfcTag tag) async {
+          debugPrint(tag.data["nfca"]["identifier"].toString());
+        },
+      );
+    }
+  }
+
+  // void nfc() async {
+  //   try {
+  //     var availability = await FlutterNfcKit.nfcAvailability;
+  //     if (availability == NFCAvailability.available) {
+  //       // timeout only works on Android, while the latter two messages are only for iOS
+  //       var tag = await FlutterNfcKit.poll(
+  //           timeout: const Duration(seconds: 10),
+  //           iosMultipleTagMessage: "Multiple tags found!",
+  //           iosAlertMessage: "Scan your tag");
+  //       result.value = tag.id;
+  //       debugPrint(tag.id);
+  //       var response = loginResponse();
+  //       response.then((value) => showMsg(value));
+  //     }
+  //   } catch (e) {
+  //     debugPrint(e.toString());
+  //     await FlutterNfcKit.finish();
+  //     nfc();
+  //   } finally {}
+  // }
 
   Future<bool> loginResponse() async {
-    var map = {
-      'username': usernameController.text,
-      'password': passwordController.text
-    };
-    var url = Uri.parse('http://192.168.0.238/okhttp/api/values/Login');
-    var response = await http.post(url, body: map);
-    if (response.statusCode == 200) {
-      debugPrint('Response body: ${response.body}');
+    try {
+      var map = {
+        "username": usernameController.text,
+        "password": passwordController.text,
+        "tag": result.value,
+      };
+      var url = Uri.parse('http://192.168.0.238/okhttp/api/values/Login');
+      var response = await http.post(url, body: jsonEncode(map));
+      if (response.statusCode == 200) return json.decode(response.body)['result'];
+    } catch (e) {
+      debugPrint(e.toString());
     }
     return false;
+  }
+
+  Future<void> showMsg(var isLoginSuccess) async {
+    try {
+      if (isLoginSuccess) {
+        runApp(const ImagePickerPage());
+      } else {
+        ScaffoldMessenger.of(context)
+            .showSnackBar(const SnackBar(content: Text("登入失敗")));
+      }
+    } catch (e) {
+      debugPrint(e.toString());
+    }
   }
 
   @override
@@ -84,27 +154,17 @@ class _LoginPageState extends State<LoginPage> {
                   child: const Text('Login'),
                   onPressed: () {
                     if (usernameController.text.isEmpty) {
-                      const snackBar =
-                          SnackBar(content: Text("User Name is empty"));
-                      ScaffoldMessenger.of(context).showSnackBar(snackBar);
+                      ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text("User Name is empty")));
                       return;
                     }
                     if (passwordController.text.isEmpty) {
-                      const snackBar =
-                          SnackBar(content: Text("Password is empty"));
-                      ScaffoldMessenger.of(context).showSnackBar(snackBar);
+                      ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text("Password is empty")));
                       return;
                     }
                     var response = loginResponse();
-                    bool isLoginSuccess = false;
-                    response.then((value) => isLoginSuccess = value);
-                    if (isLoginSuccess) {
-                      const snackBar = SnackBar(content: Text("登入成功"));
-                      ScaffoldMessenger.of(context).showSnackBar(snackBar);
-                    } else {
-                      const snackBar = SnackBar(content: Text("登入失敗"));
-                      ScaffoldMessenger.of(context).showSnackBar(snackBar);
-                    }
+                    response.then((value) => showMsg(value));
                   },
                 )),
             Row(
@@ -118,6 +178,7 @@ class _LoginPageState extends State<LoginPage> {
                   ),
                   onPressed: () {
                     //signup screen
+                    runApp(const DeviceInfo());
                   },
                 )
               ],

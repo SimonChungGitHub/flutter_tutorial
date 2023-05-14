@@ -7,22 +7,22 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-void main() {
-  runZonedGuarded(() {
-    runApp(const MyApp());
-  }, (dynamic error, dynamic stack) {
-    developer.log("Something went wrong!", error: error, stackTrace: stack);
-  });
-}
+// void main() {
+//   runZonedGuarded(() {
+//     runApp(const MyApp());
+//   }, (dynamic error, dynamic stack) {
+//     developer.log("Something went wrong!", error: error, stackTrace: stack);
+//   });
+// }
 
-class MyApp extends StatefulWidget {
-  const MyApp({Key? key}) : super(key: key);
+class DeviceInfo extends StatefulWidget {
+  const DeviceInfo({Key? key}) : super(key: key);
 
   @override
-  State<MyApp> createState() => _MyAppState();
+  State<DeviceInfo> createState() => _DeviceInfoState();
 }
 
-class _MyAppState extends State<MyApp> {
+class _DeviceInfoState extends State<DeviceInfo> {
   static final DeviceInfoPlugin deviceInfoPlugin = DeviceInfoPlugin();
   Map<String, dynamic> _deviceData = <String, dynamic>{};
 
