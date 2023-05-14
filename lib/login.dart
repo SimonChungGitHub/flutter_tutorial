@@ -1,11 +1,9 @@
 import 'dart:convert';
-
 import 'package:flutter/material.dart';
+import 'package:flutter_tutorial/main.dart';
 import 'package:http/http.dart' as http;
 import 'package:nfc_manager/nfc_manager.dart';
-
 import 'device_info.dart';
-import 'image_picker.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({Key? key}) : super(key: key);
@@ -22,6 +20,8 @@ class _LoginPageState extends State<LoginPage> {
   @override
   void initState() {
     super.initState();
+    usernameController.text = "simon";
+    passwordController.text = "1212";
     nfc();
   }
 
@@ -99,7 +99,7 @@ class _LoginPageState extends State<LoginPage> {
   Future<void> showMsg(var isLoginSuccess) async {
     try {
       if (isLoginSuccess) {
-        runApp(const ImagePickerPage());
+        runApp(const Home());
       } else {
         ScaffoldMessenger.of(context)
             .showSnackBar(const SnackBar(content: Text("登入失敗")));

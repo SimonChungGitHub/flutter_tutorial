@@ -1,17 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_tutorial/image_picker.dart';
+import 'package:flutter_tutorial/device_info.dart';
 import 'package:flutter_tutorial/login.dart';
-import 'package:flutter_tutorial/package_info.dart';
-import 'package:http/http.dart' as http;
-
-import 'nfc.dart';
 
 void main() => runApp(const MyApp());
 
 class MyApp extends StatelessWidget {
   const MyApp({Key? key}) : super(key: key);
-
-  static const String _title = 'Login Page';
+  static const String _title = 'Login';
 
   @override
   Widget build(BuildContext context) {
@@ -25,126 +20,126 @@ class MyApp extends StatelessWidget {
   }
 }
 
-class MyStatefulWidget extends StatefulWidget {
-  const MyStatefulWidget({Key? key}) : super(key: key);
+class Home extends StatefulWidget {
+  const Home({super.key});
 
   @override
-  State<MyStatefulWidget> createState() => _MyStatefulWidgetState();
+  State<Home> createState() => _HomeState();
 }
 
-class _MyStatefulWidgetState extends State<MyStatefulWidget> {
-  TextEditingController usernameController = TextEditingController();
-  TextEditingController passwordController = TextEditingController();
-
-  Future<bool> loginResponse() async {
-    var map = {
-      'username': usernameController.text,
-      'password': passwordController.text
-    };
-    var url = Uri.parse('http://192.168.0.238/okhttp/api/values/Login');
-    var response = await http.post(url, body: map);
-    if (response.statusCode == 200) {
-      debugPrint('Response body: ${response.body}');
-    }
-    return false;
-  }
-
+class _HomeState extends State<Home> {
   @override
   Widget build(BuildContext context) {
-    return Padding(
-        padding: const EdgeInsets.all(10),
-        child: ListView(
-          children: <Widget>[
-            Container(
-                alignment: Alignment.center,
-                padding: const EdgeInsets.all(10),
-                child: const Text(
-                  'Flutter Tutorial',
-                  style: TextStyle(
-                      color: Colors.blue,
-                      fontWeight: FontWeight.w500,
-                      fontSize: 30),
-                )),
-            Container(
-                alignment: Alignment.center,
-                padding: const EdgeInsets.all(10),
-                child: const Text(
-                  'Sign in',
-                  style: TextStyle(fontSize: 20),
-                )),
-            Container(
-              padding: const EdgeInsets.all(10),
-              child: TextField(
-                controller: usernameController,
-                decoration: const InputDecoration(
-                  border: OutlineInputBorder(),
-                  labelText: 'User Name',
-                ),
-              ),
+    return MaterialApp(
+        theme: ThemeData(
+          useMaterial3: true,
+          colorSchemeSeed: const Color(0x9f4376f8),
+        ),
+        home: Scaffold(
+          appBar: AppBar(
+            centerTitle: true,
+            title: const Text(
+              'Home',
             ),
-            Container(
-              padding: const EdgeInsets.fromLTRB(10, 10, 10, 0),
-              child: TextField(
-                obscureText: true,
-                controller: passwordController,
-                decoration: const InputDecoration(
-                  border: OutlineInputBorder(),
-                  labelText: 'Password',
-                ),
-              ),
-            ),
-            TextButton(
-              onPressed: () {
-                //forgot password screen
-              },
-              child: const Text(
-                'Forgot Password',
-              ),
-            ),
-            Container(
-                height: 50,
-                padding: const EdgeInsets.fromLTRB(10, 0, 10, 0),
-                child: ElevatedButton(
-                  child: const Text('Login'),
-                  onPressed: () {
-                    print(usernameController.text);
-                    print(passwordController.text);
-
-                    // if (usernameController.text != "simon" &&
-                    //     passwordController.text != "1212") {
-                    //   const snackBar = SnackBar(content: Text('顯示訊息'));
-                    //   ScaffoldMessenger.of(context).showSnackBar(snackBar);
-                    // }
-
-                    var f = loginResponse();
-                    bool isLoginSuccess = false;
-                    f.then((value) => isLoginSuccess = value);
-                    if (isLoginSuccess) {
-                      const snackBar = SnackBar(content: Text("登入成功"));
-                      ScaffoldMessenger.of(context).showSnackBar(snackBar);
-                    } else {
-                      const snackBar = SnackBar(content: Text("登入失敗"));
-                      ScaffoldMessenger.of(context).showSnackBar(snackBar);
-                    }
-
-                  },
-                )),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: <Widget>[
-                const Text('Does not have account?'),
-                TextButton(
-                  child: const Text(
-                    'Sign in',
-                    style: TextStyle(fontSize: 20),
+            backgroundColor: const Color(0xff764abc),
+          ),
+          drawer: SizedBox(
+            width: MediaQuery.of(context).size.width * 0.6,
+            child:Drawer(
+              child: ListView(
+                // Important: Remove any padding from the ListView.
+                padding: EdgeInsets.zero,
+                children: [
+                  const UserAccountsDrawerHeader(
+                    decoration: BoxDecoration(color: Color(0xff764abc)),
+                    accountName: Text(
+                      "Simon Chung",
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    accountEmail: Text(
+                      "chungjenching@gmail.com",
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    currentAccountPicture: FlutterLogo(),
                   ),
-                  onPressed: () {
-                    //signup screen
-                  },
-                )
+                  ListTile(
+                    leading: const Icon(
+                      Icons.home,
+                    ),
+                    title: const Text('Home'),
+                    onTap: () {
+                      // Navigator.pop(context);
+                      runApp(const Home());
+                    },
+                  ),
+                  ListTile(
+                    leading: const Icon(
+                      Icons.app_registration,
+                    ),
+                    title: const Text('NFC Register'),
+                    onTap: () {
+                      runApp(const DeviceInfo());
+                    },
+                  ),
+                  ListTile(
+                    leading: const Icon(
+                      Icons.qr_code,
+                    ),
+                    title: const Text('QR Code Scanner'),
+                    onTap: () {
+                      runApp(const DeviceInfo());
+                    },
+                  ),
+                  ListTile(
+                    leading: const Icon(
+                      Icons.browse_gallery,
+                    ),
+                    title: const Text('Custom Gallery'),
+                    onTap: () {
+                      runApp(const DeviceInfo());
+                    },
+                  ),
+                  ListTile(
+                    leading: const Icon(
+                      Icons.perm_device_info,
+                    ),
+                    title: const Text('Device Info'),
+                    onTap: () {
+                      runApp(const DeviceInfo());
+                    },
+                  ),
+                  const AboutListTile(
+                    icon: Icon(
+                      Icons.info,
+                    ),
+                    applicationIcon: Icon(
+                      Icons.local_play,
+                    ),
+                    applicationName: 'Flutter App',
+                    applicationVersion: '1.0.0',
+                    applicationLegalese: '© 2023 Company',
+                    aboutBoxChildren: [
+                      Text('write something about this app'),
+                    ],
+                    child: Text('About app'),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          body: const Center(
+            child: Column(
+              children: [
+                SizedBox(
+                  height: 50,
+                ),
               ],
             ),
-          ],
+          ),
         ));
   }
 }
