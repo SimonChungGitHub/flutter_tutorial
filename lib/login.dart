@@ -4,9 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:nfc_manager/nfc_manager.dart';
 
-import 'devide_info.dart';
+import 'device_info.dart';
 import 'image_picker.dart';
-import 'nfc.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({Key? key}) : super(key: key);
@@ -20,17 +19,15 @@ class _LoginPageState extends State<LoginPage> {
   TextEditingController passwordController = TextEditingController();
   ValueNotifier<dynamic> result = ValueNotifier("");
 
-
   @override
   void initState() {
+    super.initState();
     nfc();
   }
-
 
   @override
   void dispose() {
     super.dispose();
-    // await FlutterNfcKit.finish();
     NfcManager.instance.stopSession();
   }
 
@@ -39,32 +36,47 @@ class _LoginPageState extends State<LoginPage> {
     if (isAvailable) {
       NfcManager.instance.startSession(
         onDiscovered: (NfcTag tag) async {
-          debugPrint(tag.data["nfca"]["identifier"].toString());
+          debugPrint(tag.data.toString());
+          var identifier = tag.data["nfca"]["identifier"];
+          result.value = identifierToHex(identifier);
+          var response = loginResponse();
+          response.then((value) => showMsg(value));
         },
       );
     }
   }
 
-  // void nfc() async {
-  //   try {
-  //     var availability = await FlutterNfcKit.nfcAvailability;
-  //     if (availability == NFCAvailability.available) {
-  //       // timeout only works on Android, while the latter two messages are only for iOS
-  //       var tag = await FlutterNfcKit.poll(
-  //           timeout: const Duration(seconds: 10),
-  //           iosMultipleTagMessage: "Multiple tags found!",
-  //           iosAlertMessage: "Scan your tag");
-  //       result.value = tag.id;
-  //       debugPrint(tag.id);
-  //       var response = loginResponse();
-  //       response.then((value) => showMsg(value));
-  //     }
-  //   } catch (e) {
-  //     debugPrint(e.toString());
-  //     await FlutterNfcKit.finish();
-  //     nfc();
-  //   } finally {}
-  // }
+  String identifierToHex(var identifier) {
+    var hex = [
+      "0",
+      "1",
+      "2",
+      "3",
+      "4",
+      "5",
+      "6",
+      "7",
+      "8",
+      "9",
+      "A",
+      "B",
+      "C",
+      "D",
+      "E",
+      "F"
+    ];
+    String id = "";
+    late int i;
+    for (var data in identifier) {
+      data = data & 0xff;
+      i = (data >> 4) & 0x0f;
+      id += hex[i];
+      i = data & 0x0f;
+      id += hex[i];
+    }
+    debugPrint(id);
+    return id;
+  }
 
   Future<bool> loginResponse() async {
     try {
@@ -75,7 +87,9 @@ class _LoginPageState extends State<LoginPage> {
       };
       var url = Uri.parse('http://192.168.0.238/okhttp/api/values/Login');
       var response = await http.post(url, body: jsonEncode(map));
-      if (response.statusCode == 200) return json.decode(response.body)['result'];
+      if (response.statusCode == 200) {
+        return json.decode(response.body)['result'];
+      }
     } catch (e) {
       debugPrint(e.toString());
     }
