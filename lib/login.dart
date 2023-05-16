@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_tutorial/main.dart';
 import 'package:http/http.dart' as http;
 import 'package:nfc_manager/nfc_manager.dart';
+import 'CustomDropdownButton2.dart';
 import 'device_info.dart';
 
 class LoginPage extends StatefulWidget {
@@ -16,6 +17,17 @@ class _LoginPageState extends State<LoginPage> {
   TextEditingController usernameController = TextEditingController();
   TextEditingController passwordController = TextEditingController();
   ValueNotifier<dynamic> result = ValueNotifier("");
+  String? selectedValue;
+  final List<String> items = [
+    'Item1234567890',
+    'Item2',
+    'Item3',
+    'Item4',
+    'Item5',
+    'Item6',
+    'Item7',
+    'Item8',
+  ];
 
   @override
   void initState() {
@@ -86,7 +98,9 @@ class _LoginPageState extends State<LoginPage> {
         "tag": result.value,
       };
       var url = Uri.parse('http://192.168.0.238/okhttp/api/values/Login');
-      var response = await http.post(url, body: jsonEncode(map));
+      var response = await http
+          .post(url, body: jsonEncode(map))
+          .timeout(const Duration(seconds: 2));
       if (response.statusCode == 200) {
         return json.decode(response.body)['result'];
       }
@@ -99,7 +113,10 @@ class _LoginPageState extends State<LoginPage> {
   Future<void> showMsg(var isLoginSuccess) async {
     try {
       if (isLoginSuccess) {
-        runApp(const Home());
+        Navigator.push(context, MaterialPageRoute(builder: (context) {
+          return const Home();
+        }));
+        // runApp(const Home());
       } else {
         ScaffoldMessenger.of(context)
             .showSnackBar(const SnackBar(content: Text("登入失敗")));
@@ -126,12 +143,20 @@ class _LoginPageState extends State<LoginPage> {
                       fontSize: 30),
                 )),
             Container(
-                alignment: Alignment.center,
+                alignment: Alignment.centerLeft,
                 padding: const EdgeInsets.all(10),
-                child: const Text(
-                  'Sign in',
-                  style: TextStyle(fontSize: 20),
-                )),
+                child: CustomDropdownButton2(
+                    hint: 'Select Item',
+                    dropdownItems: items,
+                    value: selectedValue,
+                    buttonWidth: 180,
+                    buttonHeight: 50,
+                    dropdownWidth: 200,
+                    onChanged: (value) {
+                      setState(() {
+                        selectedValue = value;
+                      });
+                    })),
             Container(
               padding: const EdgeInsets.all(10),
               child: TextField(

@@ -2,7 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_tutorial/device_info.dart';
 import 'package:flutter_tutorial/login.dart';
 
-void main() => runApp(const MyApp());
+import 'image_picker.dart';
+
+void main() => runApp(
+    const MyApp());
 
 class MyApp extends StatelessWidget {
   const MyApp({Key? key}) : super(key: key);
@@ -28,6 +31,7 @@ class Home extends StatefulWidget {
 }
 
 class _HomeState extends State<Home> {
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -72,8 +76,10 @@ class _HomeState extends State<Home> {
                     ),
                     title: const Text('Home'),
                     onTap: () {
-                      // Navigator.pop(context);
-                      runApp(const Home());
+                      Navigator.pop(context);
+                      Navigator.push(context, MaterialPageRoute(builder: (context) {
+                        return const Home();
+                      }));
                     },
                   ),
                   ListTile(
@@ -82,7 +88,10 @@ class _HomeState extends State<Home> {
                     ),
                     title: const Text('NFC Register'),
                     onTap: () {
-                      runApp(const DeviceInfo());
+                      Navigator.of(context);
+                      Navigator.push(context, MaterialPageRoute(builder: (context) {
+                        return const ImagePickerPage();
+                      }));
                     },
                   ),
                   ListTile(
@@ -91,7 +100,9 @@ class _HomeState extends State<Home> {
                     ),
                     title: const Text('QR Code Scanner'),
                     onTap: () {
-                      runApp(const DeviceInfo());
+                      Navigator.push(context, MaterialPageRoute(builder: (context) {
+                        return const ImagePickerPage();
+                      }));
                     },
                   ),
                   ListTile(
@@ -100,6 +111,7 @@ class _HomeState extends State<Home> {
                     ),
                     title: const Text('Custom Gallery'),
                     onTap: () {
+                      Navigator.pop(context);
                       runApp(const DeviceInfo());
                     },
                   ),
@@ -109,6 +121,7 @@ class _HomeState extends State<Home> {
                     ),
                     title: const Text('Device Info'),
                     onTap: () {
+                      Navigator.pop(context);
                       runApp(const DeviceInfo());
                     },
                   ),
@@ -132,13 +145,7 @@ class _HomeState extends State<Home> {
             ),
           ),
           body: const Center(
-            child: Column(
-              children: [
-                SizedBox(
-                  height: 50,
-                ),
-              ],
-            ),
+            child: Text("this is home page"),
           ),
         ));
   }
