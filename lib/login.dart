@@ -72,7 +72,7 @@ class _LoginPageState extends State<LoginPage> {
       var url = Uri.parse(middleURL);
       var response = await http
           .post(url, body: jsonEncode(map))
-          .timeout(const Duration(seconds: 2));
+          .timeout(const Duration(seconds: 5));
       if (response.statusCode == 200) {
         return json.decode(response.body)['result'];
       }
@@ -80,6 +80,25 @@ class _LoginPageState extends State<LoginPage> {
       debugPrint(e.toString());
     }
     return false;
+  }
+
+  void _onLoading() {
+    debugPrint("----------------");
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return const Dialog(
+          child: CircularProgressIndicator(
+            backgroundColor: Colors.grey,
+            valueColor: AlwaysStoppedAnimation(Colors.blue),
+          ));
+      },
+    );
+    Future.delayed(const Duration(seconds:2), () {
+      Navigator.pop(context); //pop dialog
+      startLogin();
+    });
   }
 
   @override
@@ -156,7 +175,8 @@ class _LoginPageState extends State<LoginPage> {
                           const SnackBar(content: Text("Password is empty")));
                       return;
                     }
-                    startLogin();
+                    // startLogin();
+                    _onLoading();
                   },
                 )),
             Row(
