@@ -96,7 +96,7 @@ class _LoginPageState extends State<LoginPage> {
         'password': _passwordController.text,
         'tag': _tagID.value,
       };
-      var url = Uri.parse(middleURL);
+      var url = Uri.parse(loginURL);
       var response = await http
           .post(url, body: jsonEncode(map))
           .timeout(const Duration(seconds: 5));

@@ -1,5 +1,6 @@
 
-String middleURL = 'http://192.168.0.238/okhttp/api/values/Login';
+String loginURL = 'http://192.168.0.238/okhttp/api/values/Login';
+String fileUploadURL = 'http://192.168.0.238/okhttp/api/values/FileUpload';
 final List<String> items = [
   '台北',
   '桃園',
