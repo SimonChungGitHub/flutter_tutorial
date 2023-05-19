@@ -39,6 +39,7 @@ class _LoginPageState extends State<LoginPage> {
   final ValueNotifier<dynamic> _tagID = ValueNotifier("");
   String? selectedValue;
   FocusNode myFocusNode = FocusNode();
+  bool isAvailableNFC = false;
 
   @override
   void initState() {
@@ -47,18 +48,15 @@ class _LoginPageState extends State<LoginPage> {
   }
 
   @override
-  Future<void> dispose() async {
+  void dispose() {
     super.dispose();
-    bool isAvailable = await NfcManager.instance.isAvailable();
-    if (isAvailable) {
-      NfcManager.instance.stopSession();
-    }
+    if (isAvailableNFC) NfcManager.instance.stopSession();
     myFocusNode.dispose();
   }
 
   void _enableNFC() async {
-    bool isAvailable = await NfcManager.instance.isAvailable();
-    if (isAvailable) {
+    isAvailableNFC = await NfcManager.instance.isAvailable();
+    if (isAvailableNFC) {
       NfcManager.instance.startSession(
         onDiscovered: (NfcTag tag) async {
           var identifier = tag.data['nfca']['identifier'];
