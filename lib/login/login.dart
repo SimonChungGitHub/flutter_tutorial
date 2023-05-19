@@ -1,12 +1,30 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:flutter_smart_dialog/flutter_smart_dialog.dart';
 import 'package:flutter_tutorial/main.dart';
 import 'package:flutter_tutorial/utils.dart';
 import 'package:http/http.dart' as http;
 import 'package:nfc_manager/nfc_manager.dart';
-import 'CustomDropdownButton2.dart';
-import 'config.dart';
-import 'device_info.dart';
+import '../config.dart';
+import '../custom_loading.dart';
+import '../globalData.dart';
+
+class Login extends StatelessWidget {
+  const Login({Key? key}) : super(key: key);
+  static const String _title = 'Login';
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      navigatorObservers: [FlutterSmartDialog.observer],
+      builder: FlutterSmartDialog.init(),
+      title: _title,
+      home: const Scaffold(
+        body: LoginPage(),
+      ),
+    );
+  }
+}
 
 class LoginPage extends StatefulWidget {
   const LoginPage({Key? key}) : super(key: key);
@@ -16,45 +34,51 @@ class LoginPage extends StatefulWidget {
 }
 
 class _LoginPageState extends State<LoginPage> {
-  TextEditingController usernameController = TextEditingController();
-  TextEditingController passwordController = TextEditingController();
-  ValueNotifier<dynamic> result = ValueNotifier("");
+  final TextEditingController _usernameController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
+  final ValueNotifier<dynamic> _tagID = ValueNotifier("");
   String? selectedValue;
+  FocusNode myFocusNode = FocusNode();
 
   @override
   void initState() {
     super.initState();
-    usernameController.text = "simon";
-    passwordController.text = "1212";
-    nfc();
+    _enableNFC();
   }
 
-  void nfc() async {
+  @override
+  Future<void> dispose() async {
+    super.dispose();
+    bool isAvailable = await NfcManager.instance.isAvailable();
+    if (isAvailable) {
+      NfcManager.instance.stopSession();
+    }
+    myFocusNode.dispose();
+  }
+
+  void _enableNFC() async {
     bool isAvailable = await NfcManager.instance.isAvailable();
     if (isAvailable) {
       NfcManager.instance.startSession(
         onDiscovered: (NfcTag tag) async {
-          var identifier = tag.data["nfca"]["identifier"];
-          result.value = identifierToHex(identifier);
-          startLogin();
+          var identifier = tag.data['nfca']['identifier'];
+          _tagID.value = identifierToHex(identifier);
+          _startLogin();
         },
       );
     }
   }
 
-  void startLogin() {
-    loginResponse().then((isLoginSuccess) {
+  void _startLogin() {
+    _loginResponse().then((value) {
       try {
+        var isLoginSuccess = value['result'];
         if (isLoginSuccess) {
-          Navigator.push(context, MaterialPageRoute(builder: (context) {
-            return const Home();
-          })).then((value) {
-            nfc();
-            result.value = '';
-          });
+          isLogin = true;
+          runApp(const MyApp());
         } else {
-          ScaffoldMessenger.of(context)
-              .showSnackBar(const SnackBar(content: Text("登入失敗")));
+          ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text(value['errorMessage'].toString())));
         }
       } catch (e) {
         debugPrint(e.toString());
@@ -62,43 +86,43 @@ class _LoginPageState extends State<LoginPage> {
     });
   }
 
-  Future<bool> loginResponse() async {
+  Future<Map> _loginResponse() async {
     try {
+      SmartDialog.showLoading(
+        animationType: SmartAnimationType.scale,
+        builder: (_) => const CustomLoading(type: 5),
+      );
+      await Future.delayed(const Duration(seconds: 2));
       var map = {
-        "username": usernameController.text,
-        "password": passwordController.text,
-        "tag": result.value,
+        'username': _usernameController.text,
+        'password': _passwordController.text,
+        'tag': _tagID.value,
       };
       var url = Uri.parse(middleURL);
       var response = await http
           .post(url, body: jsonEncode(map))
           .timeout(const Duration(seconds: 5));
-      if (response.statusCode == 200) {
-        return json.decode(response.body)['result'];
+      var code = response.statusCode;
+      if (code == 200) {
+        var result = json.decode(response.body)['result'];
+        if (result) {
+          return {'result': true};
+        } else {
+          if (_tagID.value.toString().isNotEmpty) {
+            return {'result': false, 'errorMessage': '登入失敗：NFC 標籤錯誤'};
+          } else {
+            return {'result': false, 'errorMessage': '登入失敗：帳號密碼錯誤'};
+          }
+        }
+      } else {
+        return {'result': false, 'errorMessage': '登入失敗： code $code'};
       }
     } catch (e) {
       debugPrint(e.toString());
+      return {'result': false, 'errorMessage': '登入失敗： $e'};
+    } finally {
+      SmartDialog.dismiss();
     }
-    return false;
-  }
-
-  void _onLoading() {
-    debugPrint("----------------");
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (BuildContext context) {
-        return const Dialog(
-          child: CircularProgressIndicator(
-            backgroundColor: Colors.grey,
-            valueColor: AlwaysStoppedAnimation(Colors.blue),
-          ));
-      },
-    );
-    Future.delayed(const Duration(seconds:2), () {
-      Navigator.pop(context); //pop dialog
-      startLogin();
-    });
   }
 
   @override
@@ -118,25 +142,19 @@ class _LoginPageState extends State<LoginPage> {
                       fontSize: 30),
                 )),
             Container(
-                alignment: Alignment.centerLeft,
+                alignment: Alignment.center,
                 padding: const EdgeInsets.all(10),
-                child: CustomDropdownButton2(
-                    hint: 'Select Item',
-                    dropdownItems: items,
-                    value: selectedValue,
-                    buttonWidth: 180,
-                    buttonHeight: 50,
-                    dropdownWidth: 200,
-                    onChanged: (value) {
-                      setState(() => selectedValue = value);
-                    })),
+                child: const Text(
+                  'Fill name and pwd to login',
+                  style: TextStyle(fontSize: 15),
+                )),
             Container(
               padding: const EdgeInsets.all(10),
               child: TextField(
-                controller: usernameController,
+                controller: _usernameController,
                 decoration: const InputDecoration(
                   border: OutlineInputBorder(),
-                  labelText: 'User Name',
+                  labelText: 'UserName',
                 ),
               ),
             ),
@@ -144,7 +162,7 @@ class _LoginPageState extends State<LoginPage> {
               padding: const EdgeInsets.fromLTRB(10, 10, 10, 0),
               child: TextField(
                 obscureText: true,
-                controller: passwordController,
+                controller: _passwordController,
                 decoration: const InputDecoration(
                   border: OutlineInputBorder(),
                   labelText: 'Password',
@@ -153,7 +171,7 @@ class _LoginPageState extends State<LoginPage> {
             ),
             TextButton(
               onPressed: () {
-                //forgot password screen
+                //todo forgot password screen
               },
               child: const Text(
                 'Forgot Password',
@@ -163,20 +181,21 @@ class _LoginPageState extends State<LoginPage> {
                 height: 50,
                 padding: const EdgeInsets.fromLTRB(10, 0, 10, 0),
                 child: ElevatedButton(
+                  focusNode: myFocusNode,
                   child: const Text('Login'),
                   onPressed: () {
-                    if (usernameController.text.isEmpty) {
+                    if (_usernameController.text.isEmpty) {
                       ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text("User Name is empty")));
+                          const SnackBar(content: Text('Fill UserName')));
                       return;
                     }
-                    if (passwordController.text.isEmpty) {
+                    if (_passwordController.text.isEmpty) {
                       ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text("Password is empty")));
+                          const SnackBar(content: Text('Fill Password')));
                       return;
                     }
-                    // startLogin();
-                    _onLoading();
+                    _startLogin();
+                    myFocusNode.requestFocus();
                   },
                 )),
             Row(
@@ -189,8 +208,7 @@ class _LoginPageState extends State<LoginPage> {
                     style: TextStyle(fontSize: 20),
                   ),
                   onPressed: () {
-                    //signup screen
-                    runApp(const DeviceInfo());
+                    //todo signup screen
                   },
                 )
               ],
