@@ -7,7 +7,7 @@ import 'package:http/http.dart' as http;
 import 'package:nfc_manager/nfc_manager.dart';
 import '../config.dart';
 import '../custom_loading.dart';
-import '../globalData.dart';
+import '../global_data.dart';
 
 class Login extends StatelessWidget {
   const Login({Key? key}) : super(key: key);
