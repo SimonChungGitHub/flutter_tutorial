@@ -7,6 +7,7 @@ import 'package:flutter_tutorial/image_zoomer.dart';
 import 'package:flutter_tutorial/login/login.dart';
 import 'package:flutter_tutorial/utils.dart';
 import 'package:nfc_manager/nfc_manager.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:sn_progress_dialog/progress_dialog.dart';
 
 import 'CustomDropdownButton2.dart';
@@ -50,6 +51,28 @@ class _HomeState extends State<Home> {
     super.initState();
     if (!isLogin) runApp(const Login());
     _enableNFC();
+    checkPermission();
+  }
+
+  void checkPermission() async {
+    var camera = await Permission.camera.status;
+    if (camera.isDenied) {
+      await Permission.camera.request();
+    }
+
+    var photos = await Permission.photos.status;
+    var videos = await Permission.videos.status;
+    if (photos.isDenied || videos.isDenied) {
+      await [
+        Permission.photos,
+        Permission.videos,
+      ].request();
+    }
+
+    var audio = await Permission.audio.status;
+    if (audio.isDenied) {
+      await Permission.audio.request();
+    }
   }
 
   void _enableNFC() async {
@@ -70,10 +93,8 @@ class _HomeState extends State<Home> {
       var dio = Dio();
       ProgressDialog pd = ProgressDialog(context: context);
       pd.show(max: 100, msg: 'File Uploading...');
-      FormData formData = FormData.fromMap({
-        "dept": "temp",
-        "file": await MultipartFile.fromFile(tempPath)
-      });
+      FormData formData = FormData.fromMap(
+          {"dept": "temp", "file": await MultipartFile.fromFile(tempPath)});
       final response = await dio.post(
         fileUploadURL,
         data: formData,
