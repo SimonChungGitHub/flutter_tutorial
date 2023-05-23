@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:dio/dio.dart';
 import 'package:dropdown_button2/dropdown_button2.dart';
 import 'package:easy_image_viewer/easy_image_viewer.dart';
@@ -6,6 +8,7 @@ import 'package:flutter_tutorial/device_info.dart';
 import 'package:flutter_tutorial/image_zoomer.dart';
 import 'package:flutter_tutorial/login/login.dart';
 import 'package:flutter_tutorial/utils.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:nfc_manager/nfc_manager.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:sn_progress_dialog/progress_dialog.dart';
@@ -43,8 +46,9 @@ class _HomeState extends State<Home> {
   TextEditingController selectItemController = TextEditingController();
   String? selectedValue;
 
-  final Image _image = Image.asset("assets/test.jpg");
+  // final Image _image = Image.asset("assets/test.jpg");
   String tempPath = '/storage/sdcard0/DCIM/Camera/20230301_221800.jpg';
+  XFile? xFile;
 
   @override
   void initState() {
@@ -90,11 +94,12 @@ class _HomeState extends State<Home> {
 
   void dioUpload() async {
     try {
+      if (xFile == null) return;
       var dio = Dio();
       ProgressDialog pd = ProgressDialog(context: context);
       pd.show(max: 100, msg: 'File Uploading...');
       FormData formData = FormData.fromMap(
-          {"dept": "temp", "file": await MultipartFile.fromFile(tempPath)});
+          {"dept": "temp", "file": await MultipartFile.fromFile(xFile!.path)});
       final response = await dio.post(
         fileUploadURL,
         data: formData,
@@ -103,6 +108,12 @@ class _HomeState extends State<Home> {
           pd.update(value: progress);
         },
       );
+      bool result = bool.parse(response.data.toString());
+      if (result && xFile != null) {
+        File(xFile!.path).deleteSync();
+        xFile = null;
+        setState(() {});
+      }
       debugPrint('--------${response.data.toString()}');
     } catch (e) {
       debugPrint(e.toString());
@@ -368,17 +379,50 @@ class _HomeState extends State<Home> {
                     dioUpload();
                   },
                 )),
-            Container(
-              padding: const EdgeInsets.all(10),
-              child: ClipRRect(
+            showImage(xFile),
+          ],
+        ));
+  }
+
+  Widget showImage(file) {
+    if (file == null) {
+      return TextButton(
+        onPressed: () {
+          ImagePicker picker = ImagePicker();
+          picker.pickImage(source: ImageSource.camera).then((value) {
+            xFile = value;
+            setState(() {});
+          });
+        },
+        child: const Text("拍照片"),
+      );
+    } else {
+      return Container(
+          padding: const EdgeInsets.all(10),
+          child: Column(
+            children: <Widget>[
+              TextButton(
+                onPressed: () {
+                  ImagePicker picker = ImagePicker();
+                  picker.pickImage(source: ImageSource.camera).then((value) {
+                    xFile = value;
+                    setState(() {});
+                  });
+                },
+                child: const Text("拍照片"),
+              ),
+              ClipRRect(
                   borderRadius: BorderRadius.circular(10), // Image border
                   child: GestureDetector(
                     onTap: () {
-                      showImageViewer(context, _image.image,
-                          swipeDismissible: true, doubleTapZoomable: true);
+                      if (xFile != null) {
+                        showImageViewer(
+                            context, Image.file(File(xFile!.path)).image,
+                            swipeDismissible: true, doubleTapZoomable: true);
+                      }
                     }, // Image tapped
                     child: Image(
-                        image: _image.image,
+                        image: Image.file(File(xFile!.path)).image,
                         fit: BoxFit.fill,
                         loadingBuilder: (context, child, loadingProgress) {
                           if (loadingProgress == null) return child;
@@ -403,8 +447,8 @@ class _HomeState extends State<Home> {
                           );
                         }),
                   )),
-            ),
-          ],
-        ));
+            ],
+          ));
+    }
   }
 }
