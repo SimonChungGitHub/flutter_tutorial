@@ -12,6 +12,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:nfc_manager/nfc_manager.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:sn_progress_dialog/progress_dialog.dart';
+import 'package:yaml/yaml.dart';
 
 import 'CustomDropdownButton2.dart';
 import 'config.dart';
@@ -26,11 +27,22 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    loadAsset(context);
     return const MaterialApp(
       title: _title,
       home: Home(),
       debugShowCheckedModeBanner: false,
     );
+  }
+
+  Future<void> loadAsset(BuildContext context) async {
+    final yamlString =
+        await DefaultAssetBundle.of(context).loadString('assets/config.yaml');
+    final dynamic yamlMap = loadYaml(yamlString);
+    debugPrint(yamlMap['loginURL']);
+    debugPrint(yamlMap['fileUploadURL']);
+    var list = yamlMap['items'].toString().split(',');
+    debugPrint(list.toString());
   }
 }
 
