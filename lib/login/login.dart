@@ -37,7 +37,6 @@ class _LoginPageState extends State<LoginPage> {
   final TextEditingController _usernameController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   final ValueNotifier<dynamic> _tagID = ValueNotifier("");
-  String? selectedValue;
   FocusNode myFocusNode = FocusNode();
   bool isAvailableNFC = false;
 
@@ -68,20 +67,25 @@ class _LoginPageState extends State<LoginPage> {
   }
 
   void _startLogin() {
-    _loginResponse().then((value) {
-      try {
-        var isLoginSuccess = value['result'];
-        if (isLoginSuccess) {
-          isLogin = true;
-          runApp(const MyApp());
-        } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text(value['errorMessage'].toString())));
-        }
-      } catch (e) {
-        debugPrint(e.toString());
-      }
-    });
+    checkPermission().then((value) => {
+          if (value)
+            {
+              _loginResponse().then((value) {
+                try {
+                  var isLoginSuccess = value['result'];
+                  if (isLoginSuccess) {
+                    isLogin = true;
+                    runApp(const MyApp());
+                  } else {
+                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                        content: Text(value['errorMessage'].toString())));
+                  }
+                } catch (e) {
+                  debugPrint(e.toString());
+                }
+              })
+            }
+        });
   }
 
   Future<Map> _loginResponse() async {

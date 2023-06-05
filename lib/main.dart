@@ -10,7 +10,6 @@ import 'package:flutter_tutorial/login/login.dart';
 import 'package:flutter_tutorial/utils.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:nfc_manager/nfc_manager.dart';
-import 'package:permission_handler/permission_handler.dart';
 import 'package:sn_progress_dialog/progress_dialog.dart';
 import 'package:yaml/yaml.dart';
 
@@ -68,27 +67,6 @@ class _HomeState extends State<Home> {
     if (!isLogin) runApp(const Login());
     _enableNFC();
     checkPermission();
-  }
-
-  void checkPermission() async {
-    var camera = await Permission.camera.status;
-    if (camera.isDenied) {
-      await Permission.camera.request();
-    }
-
-    var photos = await Permission.photos.status;
-    var videos = await Permission.videos.status;
-    if (photos.isDenied || videos.isDenied) {
-      await [
-        Permission.photos,
-        Permission.videos,
-      ].request();
-    }
-
-    var audio = await Permission.audio.status;
-    if (audio.isDenied) {
-      await Permission.audio.request();
-    }
   }
 
   void _enableNFC() async {
