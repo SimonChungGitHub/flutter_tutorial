@@ -149,13 +149,7 @@ class _DialogExampleState extends State<DialogExample> {
                     style:
                         ElevatedButton.styleFrom(backgroundColor: Colors.blue),
                     child: const Text('時間選單'),
-                    onPressed: () {
-                      _showDatePicker2().then((value) {
-                        setState(() {
-                          text = value.toString();
-                        });
-                      });
-                    }),
+                    onPressed: () => _showDatePicker2()),
               ),
 
               ///動畫視窗
