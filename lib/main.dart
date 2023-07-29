@@ -18,6 +18,7 @@ import 'package:yaml/yaml.dart';
 
 import 'CustomDropdownButton2.dart';
 import 'config.dart';
+import 'example/animation.dart';
 import 'example/dialog.dart';
 import 'global_data.dart';
 import 'image_picker.dart';
@@ -208,6 +209,19 @@ class _HomeState extends State<Home> {
                         }));
 
                   }),
+            ),
+            Container(
+              height: 50,
+              padding: const EdgeInsets.fromLTRB(10, 10, 10, 0),
+              child:
+              ElevatedButton(child: const Text('動畫'), onPressed: () {
+                Navigator.pop(context);
+                Navigator.push(context,
+                    MaterialPageRoute(builder: (context) {
+                      return const AnimationDialog();
+                    }));
+
+              }),
             ),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,

@@ -1,6 +1,8 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
+import 'animation.dart';
+
 class DialogExample extends StatefulWidget {
   const DialogExample({super.key});
 
@@ -31,6 +33,7 @@ class _DialogExampleState extends State<DialogExample> {
     "金門",
     "馬祖"
   ];
+  String? text;
 
   @override
   Widget build(BuildContext context) {
@@ -44,89 +47,181 @@ class _DialogExampleState extends State<DialogExample> {
       ),
       body: Column(
         children: <Widget>[
-          ///地名選單
+          const Text(
+              '对话框本质上是属于一个路由的页面route，由Navigator进行管理，所以控制对话框的显示和隐藏，也是调用Navigator.of(context)的push和pop方法。'),
+          const Text(
+              '在Flutter中，对话框会有两种风格，调用showDialog()方法展示的是material风格的对话框，调用showCupertinoDialog()方法展示的是ios风格的对话框。而这两个方法其实都会去调用showGeneralDialog()方法，可以从源码中看到最后是利用Navigator.of(context, rootNavigator: true).push()一个页面。'),
+          const Text(
+              '基本要传的参数:context上下文,builder用于创建显示的widget,barrierDismissible可以控制点击对话框以外的区域是否隐藏对话框。'),
+          const Text(
+              '你会注意到，showDialog()方法返回的是一个Future对象,可以通过这个future对象来获取对话框所传递的数据。比如我们想知道想知道用户是点击了对话框的确认按钮还是取消按钮,那就在退出对话框的时候，利用Navigator.of(context).pop("一些数据");'),
           Container(
-            height: 60,
-            padding: const EdgeInsets.fromLTRB(10, 30, 10, 0),
-            child: ElevatedButton(
-                style:
-                    ElevatedButton.styleFrom(backgroundColor: Colors.blue[900]),
-                child: const Text('地名選單'),
-                onPressed: () {
-                  _showModalBottomSheet().then((value) => _showSnackBar(value!));
-                }),
+            alignment: Alignment.centerLeft,
+            margin: const EdgeInsets.fromLTRB(10, 20, 10, 0),
+            padding: const EdgeInsets.all(10),
+            color: Colors.grey,
+            child: text == null
+                ? const Text('')
+                : Text(
+                    text!,
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                        fontSize: 24,
+                        fontWeight: FontWeight.w900,
+                        color: Colors.orange[900]),
+                  ),
+          ),
+          Row(
+            children: [
+              ///地名選單
+              Container(
+                alignment: Alignment.centerLeft,
+                padding: const EdgeInsets.all(10),
+                child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.blue[900]),
+                    child: const Text('地名選單'),
+                    onPressed: () {
+                      _showModalBottomSheet().then((value) {
+                        setState(() {
+                          text = value!;
+                        });
+                      });
+                    }),
+              ),
+
+              ///提示視窗
+              Container(
+                alignment: Alignment.centerLeft,
+                padding: const EdgeInsets.all(10),
+                child: ElevatedButton(
+                    style:
+                        ElevatedButton.styleFrom(backgroundColor: Colors.green),
+                    child: const Text('提示視窗'),
+                    onPressed: () => _showAlertDialogWithButton().then((value) {
+                          setState(() {
+                            value ??= false;
+                            if (value!) {
+                              text = '刪除檔案';
+                            } else {
+                              text = '取消刪除檔案';
+                            }
+                          });
+                        })),
+              ),
+
+              ///進度條
+              Container(
+                alignment: Alignment.centerLeft,
+                padding: const EdgeInsets.all(10),
+                child: ElevatedButton(
+                    style:
+                        ElevatedButton.styleFrom(backgroundColor: Colors.green),
+                    child: const Text('進度條'),
+                    onPressed: () => _showLoadingDialog()),
+              ),
+            ],
+          ),
+          Row(
+            children: [
+              ///日期選單
+              Container(
+                alignment: Alignment.centerLeft,
+                padding: const EdgeInsets.all(10),
+                child: ElevatedButton(
+                    style:
+                        ElevatedButton.styleFrom(backgroundColor: Colors.blue),
+                    child: const Text('日期選單'),
+                    onPressed: () {
+                      _showDatePicker1().then((value) {
+                        setState(() {
+                          text = value.toString();
+                        });
+                      });
+                    }),
+              ),
+
+              ///時間選單
+              Container(
+                alignment: Alignment.centerLeft,
+                padding: const EdgeInsets.all(10),
+                child: ElevatedButton(
+                    style:
+                        ElevatedButton.styleFrom(backgroundColor: Colors.blue),
+                    child: const Text('時間選單'),
+                    onPressed: () {
+                      _showDatePicker2().then((value) {
+                        setState(() {
+                          text = value.toString();
+                        });
+                      });
+                    }),
+              ),
+
+              ///動畫視窗
+              Container(
+                alignment: Alignment.centerLeft,
+                padding: const EdgeInsets.all(10),
+                child: ElevatedButton(
+                    style:
+                        ElevatedButton.styleFrom(backgroundColor: Colors.green),
+                    child: const Text('動畫視窗'),
+                    onPressed: () {
+                      Navigator.push(context,
+                          MaterialPageRoute(builder: (context) {
+                        return const AnimationDialog();
+                      }));
+                    }),
+              ),
+            ],
           ),
 
-          ///提示視窗
+          ///SnackBar
           Container(
-            height: 60,
-            padding: const EdgeInsets.fromLTRB(10, 30, 10, 0),
+            alignment: Alignment.centerLeft,
+            padding: const EdgeInsets.all(10),
             child: ElevatedButton(
                 style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
-                child: const Text('提示視窗'),
-                onPressed: () => _showAlertDialogWithButton()),
+                child: const Text('SnackBar'),
+                onPressed: () => _showSnackBar(text)),
           ),
+          Row(
+            children: [
+              ///listDialog
+              Container(
+                alignment: Alignment.centerLeft,
+                padding: const EdgeInsets.all(10),
+                child: ElevatedButton(
+                    style:
+                        ElevatedButton.styleFrom(backgroundColor: Colors.green),
+                    child: const Text('list dialog'),
+                    onPressed: () => listDialog()),
+              ),
 
-          ///進度條
-          Container(
-            height: 60,
-            padding: const EdgeInsets.fromLTRB(10, 30, 10, 0),
-            child: ElevatedButton(
-                style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
-                child: const Text('進度條'),
-                onPressed: () => _showLoadingDialog()),
-          ),
+              ///simpleDialog
+              Container(
+                alignment: Alignment.centerLeft,
+                padding: const EdgeInsets.all(10),
+                child: ElevatedButton(
+                    style:
+                        ElevatedButton.styleFrom(backgroundColor: Colors.blue),
+                    child: const Text('simple dialog'),
+                    onPressed: () {
+                      simpleDialog().then((value) => _showSnackBar(value));
+                    }),
+              ),
 
-          ///日期選單
-          Container(
-            height: 60,
-            padding: const EdgeInsets.fromLTRB(10, 30, 10, 0),
-            child: ElevatedButton(
-                style: ElevatedButton.styleFrom(backgroundColor: Colors.blue),
-                child: const Text('日期選單_1'),
-                onPressed: () => _showDatePicker1()),
-          ),
-
-          ///日期選單
-          Container(
-            height: 60,
-            padding: const EdgeInsets.fromLTRB(10, 30, 10, 0),
-            child: ElevatedButton(
-                style: ElevatedButton.styleFrom(backgroundColor: Colors.blue),
-                child: const Text('日期選單_2'),
-                onPressed: () => _showDatePicker2()),
-          ),
-
-          ///listDialog
-          Container(
-            height: 60,
-            padding: const EdgeInsets.fromLTRB(10, 30, 10, 0),
-            child: ElevatedButton(
-                style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
-                child: const Text('list dialog'),
-                onPressed: () => listDialog()),
-          ),
-
-          ///simpleDialog
-          Container(
-            height: 60,
-            padding: const EdgeInsets.fromLTRB(10, 30, 10, 0),
-            child: ElevatedButton(
-                style: ElevatedButton.styleFrom(backgroundColor: Colors.blue),
-                child: const Text('simple dialog'),
-                onPressed: () {
-                  simpleDialog().then((value) => _showSnackBar(value));
-                }),
-          ),
-
-          ///alertDialog
-          Container(
-            height: 60,
-            padding: const EdgeInsets.fromLTRB(10, 30, 10, 0),
-            child: ElevatedButton(
-                style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
-                child: const Text('alert dialog'),
-                onPressed: () => alertDialog()),
+              ///alertDialog
+              Container(
+                alignment: Alignment.centerLeft,
+                padding: const EdgeInsets.all(10),
+                child: ElevatedButton(
+                    style:
+                        ElevatedButton.styleFrom(backgroundColor: Colors.green),
+                    child: const Text('alert dialog'),
+                    onPressed: () => alertDialog()),
+              ),
+            ],
           ),
         ],
       ),
@@ -135,11 +230,11 @@ class _DialogExampleState extends State<DialogExample> {
 
   _showSnackBar(text) {
     final snackBar = SnackBar(
-      content: Text(text),
+      content: text == null ? const Text('text is null') : Text(text),
       action: SnackBarAction(
-        label: 'Undo',
+        label: '提示視窗',
         onPressed: () {
-          debugPrint("\u001b[31m snackBar action \u001b[0m");
+          _showAlertDialogWithButton();
         },
       ),
     );
@@ -172,15 +267,14 @@ class _DialogExampleState extends State<DialogExample> {
     );
   }
 
-  ///提示視窗
+  ///提示視窗 (ios style dialog, not work)
   Future<bool?> _showAlertDialogWithButton() {
-    return showDialog<bool>(
+    return showCupertinoDialog<bool>(
         context: context,
         builder: (BuildContext context) {
           return AlertDialog(
             //背景陰影
             elevation: 2,
-            backgroundColor: Colors.green[500],
             shape: const RoundedRectangleBorder(
                 borderRadius: BorderRadius.all(Radius.circular(12.0))),
             title: const Text("提示"),
@@ -188,24 +282,18 @@ class _DialogExampleState extends State<DialogExample> {
             actions: <Widget>[
               TextButton(
                   onPressed: () {
-                    _showSnackBar('檔案被刪除');
                     Navigator.of(context).pop(true); //返回值=true
                   },
-                  child: Text("確定",
+                  child: const Text("確定",
                       style: TextStyle(
-                          color: Colors.blue[900],
-                          fontWeight: FontWeight.w500,
-                          fontSize: 18))),
+                          fontWeight: FontWeight.w500, fontSize: 18))),
               TextButton(
                   onPressed: () {
-                    Navigator.of(context).pop();
-                    _showSnackBar('刪除取消');
+                    Navigator.of(context).pop(false);
                   },
-                  child: Text("取消",
-                      style: TextStyle(
-                          color: Colors.blue[900],
-                          fontWeight: FontWeight.w500,
-                          fontSize: 18)))
+                  child: const Text("取消",
+                      style:
+                          TextStyle(fontWeight: FontWeight.w500, fontSize: 18)))
             ],
           );
         });
@@ -246,7 +334,7 @@ class _DialogExampleState extends State<DialogExample> {
     return showDatePicker(
       context: context,
       initialDate: date,
-      firstDate: date,
+      firstDate: date.add(const Duration(days: -360)),
       lastDate: date.add(
         const Duration(days: 360),
       ),
@@ -260,16 +348,21 @@ class _DialogExampleState extends State<DialogExample> {
       context: context,
       builder: (ctx) {
         return SizedBox(
-          height: 200,
+          width: MediaQuery.of(context).size.width,
+          height: 300,
           child: CupertinoDatePicker(
+            backgroundColor: Colors.white,
             mode: CupertinoDatePickerMode.dateAndTime,
-            minimumDate: date,
             maximumDate: date.add(
               const Duration(days: 360),
             ),
+            minimumYear: date.year - 1,
             maximumYear: date.year + 1,
+            use24hFormat: true,
             onDateTimeChanged: (DateTime value) {
-              debugPrint(value.toString());
+              setState(() {
+                text = value.toString();
+              });
             },
           ),
         );
@@ -282,10 +375,8 @@ class _DialogExampleState extends State<DialogExample> {
         context: context,
         builder: (BuildContext context) {
           return SimpleDialog(
-            //背景灰色程度
-            elevation: 5,
+            elevation: 3,
             backgroundColor: Colors.blue,
-            clipBehavior: Clip.antiAliasWithSaveLayer,
             shape: const RoundedRectangleBorder(
                 borderRadius: BorderRadius.all(Radius.circular(24.0))),
             title: const Text("Simple Dialog"),
@@ -331,12 +422,13 @@ class _DialogExampleState extends State<DialogExample> {
             Expanded(
                 flex: 50,
                 child: ListView.builder(
-                  itemCount: 30,
+                  itemCount: country.length,
                   itemBuilder: (BuildContext context, int index) {
                     return ListTile(
-                      title: Text("$index"),
-                      onTap: () => Navigator.of(context).pop(index),
-                    );
+                        title: Text(country[index]),
+                        onTap: () {
+                          Navigator.of(context).pop(index);
+                        });
                   },
                 )),
           ],
@@ -358,7 +450,9 @@ class _DialogExampleState extends State<DialogExample> {
       },
     );
     if (index != null) {
-      _showSnackBar('選擇 $index');
+      setState(() {
+        text = country[index];
+      });
     }
   }
 
@@ -368,8 +462,7 @@ class _DialogExampleState extends State<DialogExample> {
         builder: (BuildContext context) {
           return const AlertDialog(
             //背景陰影
-            elevation: 5,
-            backgroundColor: Colors.green,
+            elevation: 2,
             shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.all(Radius.circular(24.0))),
             title: Text("Shape"),
