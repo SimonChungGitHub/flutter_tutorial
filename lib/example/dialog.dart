@@ -1,6 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
+import '../config.dart';
 import 'animation.dart';
 
 class DialogExample extends StatefulWidget {
@@ -11,28 +12,6 @@ class DialogExample extends StatefulWidget {
 }
 
 class _DialogExampleState extends State<DialogExample> {
-  final country = const [
-    "基隆",
-    "台北",
-    "新北",
-    "桃園",
-    "新竹",
-    "苗栗",
-    "台中",
-    "彰化",
-    "南投",
-    "雲林",
-    "嘉義",
-    "台南",
-    "高雄",
-    "屏東",
-    "宜蘭",
-    "花蓮",
-    "台東",
-    "澎湖",
-    "金門",
-    "馬祖"
-  ];
   String? text;
 
   @override
@@ -242,18 +221,18 @@ class _DialogExampleState extends State<DialogExample> {
       backgroundColor: Colors.blue[900],
       builder: (BuildContext context) {
         return ListView.builder(
-          itemCount: country.length,
+          itemCount: items.length,
           itemBuilder: (BuildContext context, int index) {
             return ListTile(
               title: Text(
-                country[index],
+                items[index],
                 textAlign: TextAlign.center,
                 style: const TextStyle(
                     fontSize: 24,
                     fontWeight: FontWeight.w500,
                     color: Colors.white),
               ),
-              onTap: () => Navigator.of(context).pop(country[index]),
+              onTap: () => Navigator.of(context).pop(items[index]),
             );
           },
         );
@@ -416,10 +395,10 @@ class _DialogExampleState extends State<DialogExample> {
             Expanded(
                 flex: 50,
                 child: ListView.builder(
-                  itemCount: country.length,
+                  itemCount: items.length,
                   itemBuilder: (BuildContext context, int index) {
                     return ListTile(
-                        title: Text(country[index]),
+                        title: Text(items[index]),
                         onTap: () {
                           Navigator.of(context).pop(index);
                         });
@@ -445,7 +424,7 @@ class _DialogExampleState extends State<DialogExample> {
     );
     if (index != null) {
       setState(() {
-        text = country[index];
+        text = items[index];
       });
     }
   }
