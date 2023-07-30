@@ -2,6 +2,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
 import '../config.dart';
+import '../custom_dialog/listview_dialog.dart';
 import 'animation.dart';
 
 class DialogExample extends StatefulWidget {
@@ -101,6 +102,7 @@ class _DialogExampleState extends State<DialogExample> {
               ),
             ],
           ),
+
           Row(
             children: [
               ///日期選單
@@ -156,8 +158,19 @@ class _DialogExampleState extends State<DialogExample> {
             child: ElevatedButton(
                 style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
                 child: const Text('SnackBar'),
-                onPressed: () => _showSnackBar(text)),
+                onPressed: () => _showSnackBar('say something here')),
           ),
+
+          ///自訂義 ListViewDialog
+          Container(
+            alignment: Alignment.centerLeft,
+            padding: const EdgeInsets.all(10),
+            child: ElevatedButton(
+                style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
+                child: const Text('自訂義ListView'),
+                onPressed: () => _showCustomListViewDialog()),
+          ),
+
           Row(
             children: [
               ///listDialog
@@ -180,7 +193,11 @@ class _DialogExampleState extends State<DialogExample> {
                         ElevatedButton.styleFrom(backgroundColor: Colors.blue),
                     child: const Text('simple dialog'),
                     onPressed: () {
-                      simpleDialog().then((value) => _showSnackBar(value));
+                      simpleDialog().then((value) {
+                        setState(() {
+                          text = value;
+                        });
+                      });
                     }),
               ),
 
@@ -219,6 +236,8 @@ class _DialogExampleState extends State<DialogExample> {
     return showModalBottomSheet<String>(
       context: context,
       backgroundColor: Colors.blue[900],
+      shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.all(Radius.circular(24.0))),
       builder: (BuildContext context) {
         return ListView.builder(
           itemCount: items.length,
@@ -246,7 +265,6 @@ class _DialogExampleState extends State<DialogExample> {
         context: context,
         builder: (BuildContext context) {
           return AlertDialog(
-            //背景陰影
             elevation: 2,
             shape: const RoundedRectangleBorder(
                 borderRadius: BorderRadius.all(Radius.circular(12.0))),
@@ -341,6 +359,25 @@ class _DialogExampleState extends State<DialogExample> {
         );
       },
     );
+  }
+
+  ///自訂義ListView
+  _showCustomListViewDialog() {
+    showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) {
+          return ListViewDialog(
+            data: items,
+            callback: (index) {
+              debugPrint('aaaaaaa=========$index');
+              setState(() {
+                Navigator.of(context).pop(items[index]);
+                text = items[index];
+              });
+            },
+          );
+        });
   }
 
   Future<String?> simpleDialog() {
