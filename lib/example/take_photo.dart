@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:audioplayers/audioplayers.dart';
 import 'package:camera_camera/camera_camera.dart';
 import 'package:dio/dio.dart';
 import 'package:easy_image_viewer/easy_image_viewer.dart';
@@ -37,6 +38,11 @@ class _TakePhotoExampleState extends State<TakePhotoExample> {
       );
       _initializeControllerFuture = _controller.initialize();
     });
+    if (zoomMode) {
+      mode = 'easy_image_viewer';
+    } else {
+      mode = 'zoom_pinch_overlay';
+    }
   }
 
   @override
@@ -97,9 +103,10 @@ class _TakePhotoExampleState extends State<TakePhotoExample> {
                       picker
                           .pickImage(source: ImageSource.camera)
                           .then((value) async {
+                        if (value == null) return;
                         _showLoadingDialog();
                         await Future.delayed(const Duration(seconds: 2));
-                        setState(() => image = File(value!.path));
+                        setState(() => image = File(value.path));
                         await Future.delayed(const Duration(seconds: 1));
                         setState(() => Navigator.pop(context));
                       });
@@ -191,7 +198,13 @@ class _TakePhotoExampleState extends State<TakePhotoExample> {
       floatingActionButton: FloatingActionButton(
         onPressed: () async {
           try {
+            ///相機快門音效
+            final player = AudioPlayer();
+            await player.play(AssetSource('camera_sound.mp3'));
+
+            ///顯示相片下載 dialog
             _showLoadingDialog();
+
             await _initializeControllerFuture;
             final xFile = await _controller.takePicture();
             if (!mounted) return;
