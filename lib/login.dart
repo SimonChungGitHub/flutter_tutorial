@@ -5,9 +5,9 @@ import 'package:flutter_tutorial/main.dart';
 import 'package:flutter_tutorial/utils.dart';
 import 'package:http/http.dart' as http;
 import 'package:nfc_manager/nfc_manager.dart';
-import '../config.dart';
-import '../custom_loading.dart';
-import '../global_data.dart';
+import 'config.dart';
+import 'custom_loading.dart';
+import 'global_data.dart';
 
 class Login extends StatelessWidget {
   const Login({Key? key}) : super(key: key);
@@ -16,13 +16,10 @@ class Login extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      navigatorObservers: [FlutterSmartDialog.observer],
-      builder: FlutterSmartDialog.init(),
-      title: _title,
-      home: const Scaffold(
-        body: LoginPage(),
-      ),
-    );
+        navigatorObservers: [FlutterSmartDialog.observer],
+        builder: FlutterSmartDialog.init(),
+        title: _title,
+        home: const Scaffold(body: LoginPage()));
   }
 }
 
@@ -39,6 +36,7 @@ class _LoginPageState extends State<LoginPage> {
   final ValueNotifier<dynamic> _tagID = ValueNotifier("");
   FocusNode myFocusNode = FocusNode();
   bool isAvailableNFC = false;
+  bool _passwordVisible = false;
 
   @override
   void initState() {
@@ -60,6 +58,8 @@ class _LoginPageState extends State<LoginPage> {
         onDiscovered: (NfcTag tag) async {
           var identifier = tag.data['nfca']['identifier'];
           _tagID.value = identifierToHex(identifier);
+          debugPrint('\u001b[31m${tag.data}============\u001b[0m');
+          debugPrint('\u001b[31m${_tagID.value}\u001b[0m');
           _startLogin();
         },
       );
@@ -67,25 +67,40 @@ class _LoginPageState extends State<LoginPage> {
   }
 
   void _startLogin() {
-    checkPermission().then((value) => {
-          if (value)
-            {
-              _loginResponse().then((value) {
-                try {
-                  var isLoginSuccess = value['result'];
-                  if (isLoginSuccess) {
-                    isLogin = true;
-                    runApp(const MyApp());
-                  } else {
-                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                        content: Text(value['errorMessage'].toString())));
-                  }
-                } catch (e) {
-                  debugPrint(e.toString());
-                }
-              })
-            }
-        });
+    // checkPermission().then((value) => {
+    //       if (value)
+    //         {
+    //           _loginResponse().then((value) {
+    //             try {
+    //               var isLoginSuccess = value['result'];
+    //               if (isLoginSuccess) {
+    //                 isLogin = true;
+    //                 runApp(const MyApp());
+    //               } else {
+    //                 ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+    //                     content: Text(value['errorMessage'].toString())));
+    //               }
+    //             } catch (e) {
+    //               debugPrint(e.toString());
+    //             }
+    //           })
+    //         }
+    //     });
+
+    _loginResponse().then((value) {
+      try {
+        var isLoginSuccess = value['result'];
+        if (isLoginSuccess) {
+          isLogin = true;
+          runApp(const MyApp());
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text(value['errorMessage'].toString())));
+        }
+      } catch (e) {
+        debugPrint(e.toString());
+      }
+    });
   }
 
   Future<Map> _loginResponse() async {
@@ -100,6 +115,7 @@ class _LoginPageState extends State<LoginPage> {
         'password': _passwordController.text,
         'tag': _tagID.value,
       };
+      debugPrint('\u001b[31m${map.toString()}\u001b[0m');
       var url = Uri.parse(loginURL);
       var response = await http
           .post(url, body: jsonEncode(map))
@@ -131,7 +147,9 @@ class _LoginPageState extends State<LoginPage> {
   Widget build(BuildContext context) {
     return Padding(
         padding: const EdgeInsets.all(10),
-        child: ListView(
+        child: Container(
+          alignment: Alignment.bottomLeft,
+            child:ListView(
           children: <Widget>[
             Container(
                 alignment: Alignment.center,
@@ -145,7 +163,7 @@ class _LoginPageState extends State<LoginPage> {
                 )),
             Container(
                 alignment: Alignment.center,
-                padding: const EdgeInsets.all(10),
+                padding: const EdgeInsets.fromLTRB(10, 80, 10, 0),
                 child: const Text(
                   'Fill name and pwd to login',
                   style: TextStyle(fontSize: 15),
@@ -163,11 +181,22 @@ class _LoginPageState extends State<LoginPage> {
             Container(
               padding: const EdgeInsets.fromLTRB(10, 10, 10, 0),
               child: TextField(
-                obscureText: true,
+                obscureText: _passwordVisible,
                 controller: _passwordController,
-                decoration: const InputDecoration(
-                  border: OutlineInputBorder(),
+                decoration: InputDecoration(
+                  border: const OutlineInputBorder(),
                   labelText: 'Password',
+                  suffixIcon: IconButton(
+                    icon: Icon(
+                      _passwordVisible
+                          ? Icons.visibility
+                          : Icons.visibility_off,
+                      color: Theme.of(context).primaryColorDark,
+                    ),
+                    onPressed: () {
+                      setState(() => _passwordVisible = !_passwordVisible);
+                    },
+                  ),
                 ),
               ),
             ),
@@ -216,6 +245,6 @@ class _LoginPageState extends State<LoginPage> {
               ],
             ),
           ],
-        ));
+        )));
   }
 }
