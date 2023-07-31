@@ -25,7 +25,7 @@ class _DialogExampleState extends State<DialogExample> {
         ),
         backgroundColor: Colors.blue,
       ),
-      body: Column(
+      body: ListView(
         children: <Widget>[
           const Text(
               '对话框本质上是属于一个路由的页面route，由Navigator进行管理，所以控制对话框的显示和隐藏，也是调用Navigator.of(context)的push和pop方法。'),
@@ -59,7 +59,7 @@ class _DialogExampleState extends State<DialogExample> {
                 padding: const EdgeInsets.all(10),
                 child: ElevatedButton(
                     style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.blue[900]),
+                        backgroundColor: Colors.black54),
                     child: const Text('地名選單'),
                     onPressed: () {
                       _showModalBottomSheet().then((value) {
@@ -235,9 +235,13 @@ class _DialogExampleState extends State<DialogExample> {
   Future<String?> _showModalBottomSheet() {
     return showModalBottomSheet<String>(
       context: context,
-      backgroundColor: Colors.blue[900],
+      backgroundColor: Colors.black54,
       shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.all(Radius.circular(24.0))),
+          borderRadius: BorderRadius.only(
+              topLeft: Radius.circular(24.0),
+              topRight: Radius.circular(24.0),
+              bottomLeft: Radius.zero,
+              bottomRight: Radius.zero)),
       builder: (BuildContext context) {
         return ListView.builder(
           itemCount: items.length,
