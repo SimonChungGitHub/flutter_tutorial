@@ -104,11 +104,15 @@ class _TakePhotoExampleState extends State<TakePhotoExample> {
                           .pickImage(source: ImageSource.camera)
                           .then((value) async {
                         if (value == null) return;
+                        final Stopwatch stopwatch = Stopwatch();
+                        stopwatch.start();
                         _showLoadingDialog();
-                        await Future.delayed(const Duration(seconds: 2));
-                        setState(() => image = File(value.path));
                         await Future.delayed(const Duration(seconds: 1));
+                        setState(() => image = File(value.path));
+                        await Future.delayed(const Duration(milliseconds: 100));
                         setState(() => Navigator.pop(context));
+                        _showSnackBar('${stopwatch.elapsedMicroseconds/1000} ms');
+                        stopwatch.stop();
                       });
                     }),
               ),
@@ -202,6 +206,8 @@ class _TakePhotoExampleState extends State<TakePhotoExample> {
             final player = AudioPlayer();
             await player.play(AssetSource('camera_sound.mp3'));
 
+            final Stopwatch stopwatch = Stopwatch();
+            stopwatch.start();
             ///顯示相片下載 dialog
             _showLoadingDialog();
 
@@ -213,6 +219,8 @@ class _TakePhotoExampleState extends State<TakePhotoExample> {
               Navigator.pop(context); // 進度條dismiss
               Navigator.pop(context); //離開相機
             });
+            _showSnackBar('${stopwatch.elapsedMicroseconds/1000} ms');
+            stopwatch.stop();
           } catch (e) {
             _showSnackBar(e);
           }
@@ -243,7 +251,7 @@ class _TakePhotoExampleState extends State<TakePhotoExample> {
     return ZoomOverlay(
       modalBarrierColor: Colors.black12,
       minScale: 0.8,
-      maxScale: 1.8,
+      maxScale: 2.5,
       animationCurve: Curves.fastOutSlowIn,
       animationDuration: const Duration(milliseconds: 300),
       twoTouchOnly: true,
