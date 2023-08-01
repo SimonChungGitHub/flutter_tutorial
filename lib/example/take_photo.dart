@@ -6,9 +6,10 @@ import 'package:dio/dio.dart';
 import 'package:easy_image_viewer/easy_image_viewer.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:intl/intl.dart';
 import 'package:sn_progress_dialog/progress_dialog.dart';
 import 'package:zoom_pinch_overlay/zoom_pinch_overlay.dart';
-
+import 'package:image/image.dart' as img;
 import '../config.dart';
 
 class TakePhotoExample extends StatefulWidget {
@@ -25,6 +26,7 @@ class _TakePhotoExampleState extends State<TakePhotoExample> {
   File? image;
   bool zoomMode = false;
   String mode = 'easy_image_viewer';
+  late ProgressDialog pd;
 
   @override
   void initState() {
@@ -53,6 +55,7 @@ class _TakePhotoExampleState extends State<TakePhotoExample> {
 
   @override
   Widget build(BuildContext context) {
+    pd = ProgressDialog(context: context);
     return Scaffold(
       appBar: AppBar(
         centerTitle: true,
@@ -90,7 +93,7 @@ class _TakePhotoExampleState extends State<TakePhotoExample> {
                     }),
               ),
 
-              ///image_picker
+              ///image_picker, ps:拍完照返回若有do something(ex:建立縮圖),會導致reBuild UI延遲
               Container(
                 alignment: Alignment.centerLeft,
                 padding: const EdgeInsets.all(10),
@@ -102,17 +105,24 @@ class _TakePhotoExampleState extends State<TakePhotoExample> {
                       final picker = ImagePicker();
                       picker
                           .pickImage(source: ImageSource.camera)
-                          .then((value) async {
-                        if (value == null) return;
+                          .then((xFile) async {
+                        debugPrint(
+                            '\u001b[31m 拍照返回xFile ${xFile!.path}. \u001b[0m');
                         final Stopwatch stopwatch = Stopwatch();
                         stopwatch.start();
                         _showLoadingDialog();
                         await Future.delayed(const Duration(seconds: 1));
-                        setState(() => image = File(value.path));
-                        await Future.delayed(const Duration(milliseconds: 100));
-                        setState(() => Navigator.pop(context));
-                        _showSnackBar('${stopwatch.elapsedMicroseconds/1000} ms');
+                        File file = File(xFile.path);
+                        String filename = DateFormat('yyyyMMdd_HHmmss_SSS')
+                            .format(DateTime.now());
+                        String newPath = '${file.parent.path}/$filename.jpg';
+                        image = await file.rename(newPath);
+                        debugPrint(
+                            '\u001b[31m rename ${image!.path}. \u001b[0m');
+                        debugPrint(
+                            '\u001b[31m ${stopwatch.elapsedMicroseconds / 1000} ms \u001b[0m');
                         stopwatch.stop();
+                        setState(() => Navigator.pop(context));
                       });
                     }),
               ),
@@ -159,7 +169,10 @@ class _TakePhotoExampleState extends State<TakePhotoExample> {
                     child: const Text('上傳'),
                     onPressed: () => _dioUpload()),
               ),
-              Text(mode),
+            ],
+          ),
+          Row(
+            children: [
               Switch(
                   value: zoomMode,
                   onChanged: (value) {
@@ -172,6 +185,10 @@ class _TakePhotoExampleState extends State<TakePhotoExample> {
                       }
                     });
                   }),
+              Text(
+                mode,
+                style: const TextStyle(fontSize: 20),
+              ),
             ],
           ),
           Expanded(
@@ -208,6 +225,7 @@ class _TakePhotoExampleState extends State<TakePhotoExample> {
 
             final Stopwatch stopwatch = Stopwatch();
             stopwatch.start();
+
             ///顯示相片下載 dialog
             _showLoadingDialog();
 
@@ -219,7 +237,7 @@ class _TakePhotoExampleState extends State<TakePhotoExample> {
               Navigator.pop(context); // 進度條dismiss
               Navigator.pop(context); //離開相機
             });
-            _showSnackBar('${stopwatch.elapsedMicroseconds/1000} ms');
+            _showSnackBar('${stopwatch.elapsedMicroseconds / 1000} ms');
             stopwatch.stop();
           } catch (e) {
             _showSnackBar(e);
@@ -274,6 +292,16 @@ class _TakePhotoExampleState extends State<TakePhotoExample> {
     ScaffoldMessenger.of(context).showSnackBar(snackBar);
   }
 
+  Future<File> _reSizeImage(File jpgFile, width) async {
+    String newPath = jpgFile.path.replaceAll('.jpg', '_$width.jpg');
+    img.Image? srcImg = img.decodeImage(jpgFile.readAsBytesSync());
+    img.Image? destImg = img.copyResize(srcImg!, width: width);
+    File(newPath).writeAsBytesSync(img.encodePng(destImg));
+    File newFile = File(newPath);
+    debugPrint('\u001b[31m 建立檔案(resize) ${newFile.path} \u001b[0m');
+    return newFile;
+  }
+
   ///進度條
   _showLoadingDialog() {
     showDialog(
@@ -303,13 +331,14 @@ class _TakePhotoExampleState extends State<TakePhotoExample> {
         });
   }
 
-  ///上傳
+  ///上傳 pd:上傳完成後再製作縮圖上傳
   Future<void> _dioUpload() async {
     try {
       if (image == null) return;
+      pd.show(max: 100, msg: '檔案上傳 請稍後');
+      await Future.delayed(const Duration(seconds: 1));
+      //todo watermark
       var dio = Dio();
-      ProgressDialog pd = ProgressDialog(context: context);
-      pd.show(max: 100, msg: '檔案上傳中 請稍後');
       FormData formData = FormData.fromMap(
           {"dept": "temp", "file": await MultipartFile.fromFile(image!.path)});
       final response = await dio.post(
@@ -322,11 +351,30 @@ class _TakePhotoExampleState extends State<TakePhotoExample> {
       );
       bool result = bool.parse(response.data.toString());
       if (result && image != null) {
-        File(image!.path).deleteSync();
+        _reSizeImage(image!, 256).then((file) => _dioUploadFile(file));
+        await File(image!.path).delete();
         image = null;
         setState(() {});
       }
       debugPrint('\u001b[31m ${response.data.toString()} \u001b[0m');
+    } catch (e) {
+      debugPrint('\u001b[31m $e \u001b[0m');
+    }
+  }
+
+  Future<void> _dioUploadFile(file) async {
+    try {
+      if (file == null) return;
+      var dio = Dio();
+      FormData formData = FormData.fromMap(
+          {"dept": "temp", "file": await MultipartFile.fromFile(file!.path)});
+      final response = await dio.post(
+        fileUploadURL,
+        data: formData,
+      );
+      debugPrint('\u001b[31m ${response.data.toString()} \u001b[0m');
+      bool result = bool.parse(response.data.toString());
+      if (result) await File(file!.path).delete();
     } catch (e) {
       debugPrint('\u001b[31m $e \u001b[0m');
     }
