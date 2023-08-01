@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_smart_dialog/flutter_smart_dialog.dart';
 import 'package:flutter_tutorial/main.dart';
@@ -56,6 +57,9 @@ class _LoginPageState extends State<LoginPage> {
     if (isAvailableNFC) {
       NfcManager.instance.startSession(
         onDiscovered: (NfcTag tag) async {
+          ///音效
+          final player = AudioPlayer();
+          await player.play(AssetSource('nfc_sound.mp3'));
           var identifier = tag.data['nfca']['identifier'];
           _tagID.value = identifierToHex(identifier);
           debugPrint('\u001b[31m${tag.data}============\u001b[0m');
