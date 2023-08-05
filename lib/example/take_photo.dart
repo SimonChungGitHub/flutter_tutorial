@@ -1,12 +1,13 @@
 import 'dart:io';
 
 import 'package:audioplayers/audioplayers.dart';
-import 'package:camera_camera/camera_camera.dart';
+import 'package:camera/camera.dart';
 import 'package:dio/dio.dart';
 import 'package:easy_image_viewer/easy_image_viewer.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:sn_progress_dialog/progress_dialog.dart';
 import 'package:zoom_pinch_overlay/zoom_pinch_overlay.dart';
 import 'package:image/image.dart' as img;
@@ -22,7 +23,7 @@ class TakePhotoExample extends StatefulWidget {
 class _TakePhotoExampleState extends State<TakePhotoExample> {
   late CameraController _controller;
   late Future<void> _initializeControllerFuture;
-  late CameraDescription firstCamera;
+  late CameraDescription camera;
   File? image;
   bool zoomMode = false;
   String mode = 'easy_image_viewer';
@@ -31,15 +32,6 @@ class _TakePhotoExampleState extends State<TakePhotoExample> {
   @override
   void initState() {
     super.initState();
-    WidgetsFlutterBinding.ensureInitialized();
-    availableCameras().then((cameras) {
-      firstCamera = cameras.first;
-      _controller = CameraController(
-        firstCamera,
-        ResolutionPreset.high,
-      );
-      _initializeControllerFuture = _controller.initialize();
-    });
     if (zoomMode) {
       mode = 'easy_image_viewer';
     } else {
@@ -68,107 +60,80 @@ class _TakePhotoExampleState extends State<TakePhotoExample> {
         mainAxisAlignment: MainAxisAlignment.start,
         children: <Widget>[
           Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            mainAxisSize: MainAxisSize.max,
             children: [
-              ///camera_camera
-              Container(
-                alignment: Alignment.centerLeft,
-                padding: const EdgeInsets.all(10),
-                child: ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.blue[900]),
-                    child: const Text('camera_camera'),
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => CameraCamera(
-                            onFile: (file) {
-                              Navigator.pop(context);
-                              setState(() => image = file);
-                              _showSnackBar(file.parent);
-                            },
-                          ),
-                        ),
-                      );
-                    }),
-              ),
-
               ///image_picker, ps:拍完照返回若有do something(ex:建立縮圖),會導致reBuild UI延遲
-              Container(
-                alignment: Alignment.centerLeft,
-                padding: const EdgeInsets.all(10),
-                child: ElevatedButton(
-                    style:
-                        ElevatedButton.styleFrom(backgroundColor: Colors.green),
-                    child: const Text('image_picker'),
-                    onPressed: () {
-                      final picker = ImagePicker();
-                      picker
-                          .pickImage(source: ImageSource.camera)
-                          .then((xFile) async {
-                        debugPrint(
-                            '\u001b[31m 拍照返回xFile ${xFile!.path}. \u001b[0m');
-                        final Stopwatch stopwatch = Stopwatch();
-                        stopwatch.start();
-                        _showLoadingDialog();
-                        await Future.delayed(const Duration(seconds: 1));
-                        File file = File(xFile.path);
-                        String filename = DateFormat('yyyyMMdd_HHmmss_SSS')
-                            .format(DateTime.now());
-                        String newPath = '${file.parent.path}/$filename.jpg';
-                        image = await file.rename(newPath);
-                        debugPrint(
-                            '\u001b[31m rename ${image!.path}. \u001b[0m');
-                        debugPrint(
-                            '\u001b[31m ${stopwatch.elapsedMicroseconds / 1000} ms \u001b[0m');
-                        stopwatch.stop();
-                        setState(() => Navigator.pop(context));
-                      });
-                    }),
-              ),
-            ],
-          ),
-          Row(
-            children: [
+              ElevatedButton(
+                  style:
+                      ElevatedButton.styleFrom(backgroundColor: Colors.green),
+                  child: const Text('image_picker'),
+                  onPressed: () async {
+                    final picker = ImagePicker();
+                    final xFile = await picker.pickImage(
+                        source: ImageSource.camera,
+                        maxWidth: 1024,
+                        maxHeight: 1024,
+                        imageQuality: 100);
+                    debugPrint(
+                        '\u001b[31m 拍照返回xFile ${xFile!.path}. \u001b[0m');
+                    final Stopwatch stopwatch = Stopwatch();
+                    stopwatch.start();
+                    _showLoadingDialog();
+                    await Future.delayed(const Duration(seconds: 1));
+                    File file = File(xFile.path);
+                    String filename = DateFormat('yyyyMMdd_HHmmss_SSS')
+                        .format(DateTime.now());
+                    String newPath = '${file.parent.path}/$filename.jpg';
+                    image = await file.rename(newPath);
+                    debugPrint('\u001b[31m rename ${image!.path}. \u001b[0m');
+                    debugPrint(
+                        '\u001b[31m ${stopwatch.elapsedMicroseconds / 1000} ms \u001b[0m');
+                    stopwatch.stop();
+                    setState(() => Navigator.pop(context));
+                  }),
+
               ///自製相機
-              Container(
-                alignment: Alignment.centerLeft,
-                padding: const EdgeInsets.all(10),
-                child: ElevatedButton(
-                    style:
-                        ElevatedButton.styleFrom(backgroundColor: Colors.green),
-                    child: const Text('自製相機'),
-                    onPressed: () {
-                      WidgetsFlutterBinding.ensureInitialized();
-                      availableCameras().then((cameras) {
-                        firstCamera = cameras.first;
-                        _controller = CameraController(
-                          firstCamera,
-                          ResolutionPreset.high,
-                        );
-                        _initializeControllerFuture = _controller.initialize();
-                        Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => MaterialApp(
-                                theme: ThemeData.dark(),
-                                home: takePhotoScreen(),
-                              ),
-                            ));
-                      });
-                    }),
-              ),
+              ElevatedButton(
+                  style:
+                      ElevatedButton.styleFrom(backgroundColor: Colors.green),
+                  child: const Text('自製相機'),
+                  onPressed: () async {
+                    WidgetsFlutterBinding.ensureInitialized();
+                    final cameras = await availableCameras();
+                    camera = cameras.first;
+                    _controller = CameraController(
+                      camera,
+                      ResolutionPreset.high,
+                    );
+                    _initializeControllerFuture = _controller.initialize();
+                    setState(() {
+                      Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => MaterialApp(
+                              theme: ThemeData.dark(),
+                              home: takePhotoScreen(),
+                            ),
+                          ));
+                    });
+                  }),
 
               ///dioUpload
-              Container(
-                alignment: Alignment.centerLeft,
-                padding: const EdgeInsets.all(10),
-                child: ElevatedButton(
-                    style:
-                        ElevatedButton.styleFrom(backgroundColor: Colors.green),
-                    child: const Text('上傳'),
-                    onPressed: () => _dioUpload()),
-              ),
+              ElevatedButton(
+                  style:
+                      ElevatedButton.styleFrom(backgroundColor: Colors.green),
+                  child: const Text('上傳'),
+                  onPressed: () async {
+                    final result = await _dioUpload();
+                    if (result) {
+                      final file = await _reSizeImage(image!, 256);
+                      await _dioUploadFileDeleteFile(file);
+                      await image!.delete();
+                      image = null;
+                      setState(() {});
+                    }
+                  }),
             ],
           ),
           Row(
@@ -191,10 +156,15 @@ class _TakePhotoExampleState extends State<TakePhotoExample> {
               ),
             ],
           ),
+          const SizedBox(
+            width: 100,
+            height: 5,
+          ),
           Expanded(
-            child: Container(
-                alignment: Alignment.topCenter,
-                margin: const EdgeInsets.all(10),
+            child: SizedBox(
+                width: MediaQuery.of(context).size.width,
+                // alignment: Alignment.topCenter,
+                // margin: const EdgeInsets.all(10),
                 child: zoomMode ? easyImageViewer() : zoomPinchOverlay()),
           ),
         ],
@@ -205,46 +175,104 @@ class _TakePhotoExampleState extends State<TakePhotoExample> {
   ///自製相機
   Widget takePhotoScreen() {
     return Scaffold(
-      body: FutureBuilder<void>(
-        future: _initializeControllerFuture,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.done) {
-            return CameraPreview(_controller);
-          } else {
-            // Otherwise, display a loading indicator.
-            return const Center(child: CircularProgressIndicator());
-          }
-        },
+      body: Column(
+        children: [
+          FutureBuilder<void>(
+            future: _initializeControllerFuture,
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.done) {
+                return CameraPreview(_controller);
+              } else {
+                // Otherwise, display a loading indicator.
+                return const Center(child: CircularProgressIndicator());
+              }
+            },
+          ),
+          Expanded(
+            child: Container(
+              color: Colors.black54,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  IconButton(
+                    icon: const Icon(Icons.undo),
+                    iconSize: 60,
+                    onPressed: () => Navigator.of(context).pop(),
+                  ),
+                  IconButton(
+                      icon: const Icon(
+                        Icons.camera_alt,
+                      ),
+                      iconSize: 60,
+                      onPressed: () async {
+                        try {
+                          ///相機快門音效
+                          final player = AudioPlayer();
+                          await player.play(AssetSource('camera_sound.mp3'));
+
+                          ///碼表計時
+                          final Stopwatch stopwatch = Stopwatch();
+                          stopwatch.start();
+
+                          ///顯示相片下載 dialog
+                          _showLoadingDialog();
+                          await _initializeControllerFuture;
+                          String newPath =
+                              '${(await getTemporaryDirectory()).path}/${DateFormat('yyyyMMdd_HHmmss_SSS').format(DateTime.now())}.jpg';
+                          final xFile = await _controller.takePicture();
+
+                          if (!mounted) return;
+                          image = await File(xFile.path).rename(newPath);
+                          debugPrint('\u001b[31m ${image!.path} \u001b[0m');
+                          debugPrint(
+                              '\u001b[31m ${stopwatch.elapsedMicroseconds / 1000} ms \u001b[0m');
+                          stopwatch.stop();
+                        } on Exception catch (_) {
+                          _showSnackBar(_.toString());
+                        } finally {
+                          setState(() {
+                            Navigator.pop(context); // 進度條dismiss
+                            Navigator.pop(context); //離開相機
+                          });
+                        }
+                      }),
+                ],
+              ),
+            ),
+          ),
+        ],
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () async {
-          try {
-            ///相機快門音效
-            final player = AudioPlayer();
-            await player.play(AssetSource('camera_sound.mp3'));
-
-            final Stopwatch stopwatch = Stopwatch();
-            stopwatch.start();
-
-            ///顯示相片下載 dialog
-            _showLoadingDialog();
-
-            await _initializeControllerFuture;
-            final xFile = await _controller.takePicture();
-            if (!mounted) return;
-            setState(() {
-              image = File(xFile.path);
-              Navigator.pop(context); // 進度條dismiss
-              Navigator.pop(context); //離開相機
-            });
-            _showSnackBar('${stopwatch.elapsedMicroseconds / 1000} ms');
-            stopwatch.stop();
-          } catch (e) {
-            _showSnackBar(e);
-          }
-        },
-        child: const Icon(Icons.camera_alt),
-      ),
+      // floatingActionButton: FloatingActionButton(
+      //     onPressed: () async {
+      //       try {
+      //         ///相機快門音效
+      //         final player = AudioPlayer();
+      //         await player.play(AssetSource('camera_sound.mp3'));
+      //
+      //         ///碼表計時
+      //         final Stopwatch stopwatch = Stopwatch();
+      //         stopwatch.start();
+      //
+      //         ///顯示相片下載 dialog
+      //         _showLoadingDialog();
+      //         await _initializeControllerFuture;
+      //         final xFile = await _controller.takePicture();
+      //         if (!mounted) return;
+      //         image = File(xFile.path);
+      //         debugPrint(
+      //             '\u001b[31m ${stopwatch.elapsedMicroseconds / 1000} ms \u001b[0m');
+      //         stopwatch.stop();
+      //       } on Exception catch (_) {
+      //         _showSnackBar(_.toString());
+      //       } finally {
+      //         setState(() {
+      //           Navigator.pop(context); // 進度條dismiss
+      //           Navigator.pop(context); //離開相機
+      //         });
+      //       }
+      //     },
+      //     child: const Icon(Icons.camera_alt),
+      //   ),
     );
   }
 
@@ -259,8 +287,8 @@ class _TakePhotoExampleState extends State<TakePhotoExample> {
       },
       child: ClipRRect(
         ///是 ClipRRect，不是 ClipRect
-        borderRadius: BorderRadius.circular(12),
-        child: image == null ? null : Image.file(image!),
+        // borderRadius: BorderRadius.circular(12),
+        child: image == null ? null : Image.file(image!, fit: BoxFit.fill),
       ),
     );
   }
@@ -276,8 +304,8 @@ class _TakePhotoExampleState extends State<TakePhotoExample> {
       onScaleStart: () {},
       onScaleStop: () {},
       child: ClipRRect(
-          borderRadius: BorderRadius.circular(12),
-          child: image == null ? null : Image.file(image!)),
+          // borderRadius: BorderRadius.circular(12),
+          child: image == null ? null : Image.file(image!, fit: BoxFit.fill)),
     );
   }
 
@@ -331,10 +359,10 @@ class _TakePhotoExampleState extends State<TakePhotoExample> {
         });
   }
 
-  ///上傳 pd:上傳完成後再製作縮圖上傳
-  Future<void> _dioUpload() async {
+  ///上傳
+  Future<bool> _dioUpload() async {
     try {
-      if (image == null) return;
+      if (image == null) return false;
       pd.show(max: 100, msg: '檔案上傳 請稍後');
       await Future.delayed(const Duration(seconds: 1));
       //todo watermark
@@ -349,20 +377,16 @@ class _TakePhotoExampleState extends State<TakePhotoExample> {
           pd.update(value: progress);
         },
       );
-      bool result = bool.parse(response.data.toString());
-      if (result && image != null) {
-        _reSizeImage(image!, 256).then((file) => _dioUploadFile(file));
-        await File(image!.path).delete();
-        image = null;
-        setState(() {});
-      }
       debugPrint('\u001b[31m ${response.data.toString()} \u001b[0m');
-    } catch (e) {
-      debugPrint('\u001b[31m $e \u001b[0m');
+      return bool.parse(response.data.toString());
+    } on Exception catch (_) {
+      debugPrint('\u001b[31m ${_.toString()} \u001b[0m');
     }
+    return false;
   }
 
-  Future<void> _dioUploadFile(file) async {
+  ///上傳後刪除
+  Future<void> _dioUploadFileDeleteFile(file) async {
     try {
       if (file == null) return;
       var dio = Dio();
@@ -372,11 +396,12 @@ class _TakePhotoExampleState extends State<TakePhotoExample> {
         fileUploadURL,
         data: formData,
       );
-      debugPrint('\u001b[31m ${response.data.toString()} \u001b[0m');
       bool result = bool.parse(response.data.toString());
-      if (result) await File(file!.path).delete();
-    } catch (e) {
-      debugPrint('\u001b[31m $e \u001b[0m');
+      if (result) debugPrint('\u001b[31m 上傳檔案 ${file.path} \u001b[0m');
+      await file.delete();
+      debugPrint('\u001b[31m 刪除檔案 ${file.path} \u001b[0m');
+    } on Exception catch (_) {
+      debugPrint('\u001b[31m ${_.toString()} \u001b[0m');
     }
   }
 }
