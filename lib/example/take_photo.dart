@@ -219,6 +219,7 @@ class _TakePhotoExampleState extends State<TakePhotoExample> {
                           await _initializeControllerFuture;
                           String newPath =
                               '${(await getTemporaryDirectory()).path}/${DateFormat('yyyyMMdd_HHmmss_SSS').format(DateTime.now())}.jpg';
+                          _controller.setFocusMode(FocusMode.locked);
                           final xFile = await _controller.takePicture();
 
                           if (!mounted) return;
