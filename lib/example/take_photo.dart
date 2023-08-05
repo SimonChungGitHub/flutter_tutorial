@@ -5,6 +5,7 @@ import 'package:camera/camera.dart';
 import 'package:dio/dio.dart';
 import 'package:easy_image_viewer/easy_image_viewer.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 import 'package:path_provider/path_provider.dart';
@@ -32,6 +33,10 @@ class _TakePhotoExampleState extends State<TakePhotoExample> {
   @override
   void initState() {
     super.initState();
+    //固定該頁面螢幕垂直不旋轉
+    SystemChrome.setPreferredOrientations(
+        [DeviceOrientation.portraitUp, DeviceOrientation.portraitDown]);
+
     if (zoomMode) {
       mode = 'easy_image_viewer';
     } else {
@@ -163,8 +168,6 @@ class _TakePhotoExampleState extends State<TakePhotoExample> {
           Expanded(
             child: SizedBox(
                 width: MediaQuery.of(context).size.width,
-                // alignment: Alignment.topCenter,
-                // margin: const EdgeInsets.all(10),
                 child: zoomMode ? easyImageViewer() : zoomPinchOverlay()),
           ),
         ],
@@ -195,11 +198,6 @@ class _TakePhotoExampleState extends State<TakePhotoExample> {
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
                   IconButton(
-                    icon: const Icon(Icons.undo),
-                    iconSize: 60,
-                    onPressed: () => Navigator.of(context).pop(),
-                  ),
-                  IconButton(
                       icon: const Icon(
                         Icons.camera_alt,
                       ),
@@ -208,14 +206,12 @@ class _TakePhotoExampleState extends State<TakePhotoExample> {
                         try {
                           ///相機快門音效
                           final player = AudioPlayer();
-                          await player.play(AssetSource('camera_sound.mp3'));
+                          await player.play(AssetSource('snapshot.mp3'));
 
                           ///碼表計時
                           final Stopwatch stopwatch = Stopwatch();
                           stopwatch.start();
 
-                          ///顯示相片下載 dialog
-                          _showLoadingDialog();
                           await _initializeControllerFuture;
                           String newPath =
                               '${(await getTemporaryDirectory()).path}/${DateFormat('yyyyMMdd_HHmmss_SSS').format(DateTime.now())}.jpg';
@@ -231,10 +227,7 @@ class _TakePhotoExampleState extends State<TakePhotoExample> {
                         } on Exception catch (_) {
                           _showSnackBar(_.toString());
                         } finally {
-                          setState(() {
-                            Navigator.pop(context); // 進度條dismiss
-                            Navigator.pop(context); //離開相機
-                          });
+                          setState(() => Navigator.pop(context)); //離開相機
                         }
                       }),
                 ],
@@ -305,7 +298,6 @@ class _TakePhotoExampleState extends State<TakePhotoExample> {
       onScaleStart: () {},
       onScaleStop: () {},
       child: ClipRRect(
-          // borderRadius: BorderRadius.circular(12),
           child: image == null ? null : Image.file(image!, fit: BoxFit.fill)),
     );
   }
