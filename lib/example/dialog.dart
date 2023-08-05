@@ -51,110 +51,81 @@ class _DialogExampleState extends State<DialogExample> {
                         color: Colors.orange[900]),
                   ),
           ),
+          const SizedBox(height: 5),
           Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            mainAxisSize: MainAxisSize.max,
             children: [
               ///地名選單
-              Container(
-                alignment: Alignment.centerLeft,
-                padding: const EdgeInsets.all(10),
-                child: ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.black54),
-                    child: const Text('地名選單'),
-                    onPressed: () {
-                      _showModalBottomSheet().then((value) {
-                        setState(() {
-                          text = value!;
-                        });
-                      });
-                    }),
-              ),
+              ElevatedButton(
+                  style:
+                      ElevatedButton.styleFrom(backgroundColor: Colors.black54),
+                  child: const Text('地名選單'),
+                  onPressed: () async {
+                    text = await _showModalBottomSheet();
+                    setState(() {});
+                  }),
 
               ///提示視窗
-              Container(
-                alignment: Alignment.centerLeft,
-                padding: const EdgeInsets.all(10),
-                child: ElevatedButton(
-                    style:
-                        ElevatedButton.styleFrom(backgroundColor: Colors.green),
-                    child: const Text('提示視窗'),
-                    onPressed: () => _showAlertDialogWithButton().then((value) {
-                          setState(() {
-                            value ??= false;
-                            if (value!) {
-                              text = '刪除檔案';
-                            } else {
-                              text = '取消刪除檔案';
-                            }
-                          });
-                        })),
-              ),
+              ElevatedButton(
+                  style:
+                      ElevatedButton.styleFrom(backgroundColor: Colors.green),
+                  child: const Text('提示視窗'),
+                  onPressed: () async {
+                    var isTrue = await _showAlertDialogWithButton();
+                    isTrue ??= false;
+                    if (isTrue) {
+                      text = '刪除檔案';
+                    } else {
+                      text = '取消刪除檔案';
+                    }
+                    setState(() {});
+                  }),
 
               ///進度條
-              Container(
-                alignment: Alignment.centerLeft,
-                padding: const EdgeInsets.all(10),
-                child: ElevatedButton(
-                    style:
-                        ElevatedButton.styleFrom(backgroundColor: Colors.green),
-                    child: const Text('進度條'),
-                    onPressed: () => _showLoadingDialog()),
-              ),
+              ElevatedButton(
+                  style:
+                      ElevatedButton.styleFrom(backgroundColor: Colors.green),
+                  child: const Text('進度條'),
+                  onPressed: () => _showLoadingDialog()),
             ],
           ),
 
           Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            mainAxisSize: MainAxisSize.max,
             children: [
               ///日期選單
-              Container(
-                alignment: Alignment.centerLeft,
-                padding: const EdgeInsets.all(10),
-                child: ElevatedButton(
-                    style:
-                        ElevatedButton.styleFrom(backgroundColor: Colors.blue),
-                    child: const Text('日期選單'),
-                    onPressed: () {
-                      _showDatePicker1().then((value) {
-                        setState(() {
-                          text = value.toString();
-                        });
-                      });
-                    }),
-              ),
+              ElevatedButton(
+                  style: ElevatedButton.styleFrom(backgroundColor: Colors.blue),
+                  child: const Text('日期選單'),
+                  onPressed: () async {
+                    var dt = await _showDatePicker1();
+                    setState(() => text = dt.toString());
+                  }),
 
               ///時間選單
-              Container(
-                alignment: Alignment.centerLeft,
-                padding: const EdgeInsets.all(10),
-                child: ElevatedButton(
-                    style:
-                        ElevatedButton.styleFrom(backgroundColor: Colors.blue),
-                    child: const Text('時間選單'),
-                    onPressed: () => _showDatePicker2()),
-              ),
+              ElevatedButton(
+                  style: ElevatedButton.styleFrom(backgroundColor: Colors.blue),
+                  child: const Text('時間選單'),
+                  onPressed: () => _showDatePicker2()),
 
               ///動畫視窗
-              Container(
-                alignment: Alignment.centerLeft,
-                padding: const EdgeInsets.all(10),
-                child: ElevatedButton(
-                    style:
-                        ElevatedButton.styleFrom(backgroundColor: Colors.green),
-                    child: const Text('動畫視窗'),
-                    onPressed: () {
-                      Navigator.push(context,
-                          MaterialPageRoute(builder: (context) {
-                        return const AnimationDialog();
-                      }));
-                    }),
-              ),
+              ElevatedButton(
+                  style:
+                      ElevatedButton.styleFrom(backgroundColor: Colors.green),
+                  child: const Text('動畫視窗'),
+                  onPressed: () {
+                    Navigator.push(context,
+                        MaterialPageRoute(builder: (context) {
+                      return const AnimationDialog();
+                    }));
+                  }),
             ],
           ),
 
           ///SnackBar
-          Container(
-            alignment: Alignment.centerLeft,
-            padding: const EdgeInsets.all(10),
+          Center(
             child: ElevatedButton(
                 style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
                 child: const Text('SnackBar'),
@@ -162,9 +133,7 @@ class _DialogExampleState extends State<DialogExample> {
           ),
 
           ///自訂義 ListViewDialog
-          Container(
-            alignment: Alignment.centerLeft,
-            padding: const EdgeInsets.all(10),
+          Center(
             child: ElevatedButton(
                 style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
                 child: const Text('自訂義ListView'),
@@ -172,45 +141,31 @@ class _DialogExampleState extends State<DialogExample> {
           ),
 
           Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            mainAxisSize: MainAxisSize.max,
             children: [
               ///listDialog
-              Container(
-                alignment: Alignment.centerLeft,
-                padding: const EdgeInsets.all(10),
-                child: ElevatedButton(
-                    style:
-                        ElevatedButton.styleFrom(backgroundColor: Colors.green),
-                    child: const Text('list dialog'),
-                    onPressed: () => listDialog()),
-              ),
+              ElevatedButton(
+                  style:
+                      ElevatedButton.styleFrom(backgroundColor: Colors.green),
+                  child: const Text('list dialog'),
+                  onPressed: () => listDialog()),
 
               ///simpleDialog
-              Container(
-                alignment: Alignment.centerLeft,
-                padding: const EdgeInsets.all(10),
-                child: ElevatedButton(
-                    style:
-                        ElevatedButton.styleFrom(backgroundColor: Colors.blue),
-                    child: const Text('simple dialog'),
-                    onPressed: () {
-                      simpleDialog().then((value) {
-                        setState(() {
-                          text = value;
-                        });
-                      });
-                    }),
-              ),
+              ElevatedButton(
+                  style: ElevatedButton.styleFrom(backgroundColor: Colors.blue),
+                  child: const Text('simple dialog'),
+                  onPressed: () async {
+                    text = await simpleDialog();
+                    setState(() {});
+                  }),
 
               ///alertDialog
-              Container(
-                alignment: Alignment.centerLeft,
-                padding: const EdgeInsets.all(10),
-                child: ElevatedButton(
-                    style:
-                        ElevatedButton.styleFrom(backgroundColor: Colors.green),
-                    child: const Text('alert dialog'),
-                    onPressed: () => alertDialog()),
-              ),
+              ElevatedButton(
+                  style:
+                      ElevatedButton.styleFrom(backgroundColor: Colors.green),
+                  child: const Text('alert dialog'),
+                  onPressed: () => alertDialog()),
             ],
           ),
         ],
