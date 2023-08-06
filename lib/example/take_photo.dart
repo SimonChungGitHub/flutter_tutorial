@@ -53,6 +53,8 @@ class _TakePhotoExampleState extends State<TakePhotoExample> {
   @override
   Widget build(BuildContext context) {
     pd = ProgressDialog(context: context);
+    SystemChrome.setPreferredOrientations(
+        [DeviceOrientation.portraitUp, DeviceOrientation.portraitDown]);
     return Scaffold(
       appBar: AppBar(
         centerTitle: true,
@@ -178,95 +180,112 @@ class _TakePhotoExampleState extends State<TakePhotoExample> {
   ///自製相機
   Widget takePhotoScreen() {
     return Scaffold(
-      body: Column(
-        children: [
-          FutureBuilder<void>(
-            future: _initializeControllerFuture,
-            builder: (context, snapshot) {
-              if (snapshot.connectionState == ConnectionState.done) {
-                return CameraPreview(_controller);
-              } else {
-                // Otherwise, display a loading indicator.
-                return const Center(child: CircularProgressIndicator());
-              }
-            },
+      body: OrientationBuilder(builder: (context, orientation) {
+        SystemChrome.setPreferredOrientations([
+          DeviceOrientation.portraitUp,
+          DeviceOrientation.portraitDown,
+          DeviceOrientation.landscapeLeft,
+          DeviceOrientation.landscapeRight
+        ]);
+        if (orientation == Orientation.landscape) return landscape();
+        return portrait();
+      }),
+    );
+  }
+
+  Widget portrait() {
+    return Column(
+      children: [
+        FutureBuilder<void>(
+          future: _initializeControllerFuture,
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.done) {
+              return CameraPreview(_controller);
+            } else {
+              // Otherwise, display a loading indicator.
+              return const Center(child: CircularProgressIndicator());
+            }
+          },
+        ),
+        Expanded(
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: [
+              IconButton(
+                  icon: const Icon(
+                    Icons.camera_alt,
+                  ),
+                  iconSize: 60,
+                  onPressed: () async {
+                    try {
+                      ///相機快門音效
+                      final player = AudioPlayer();
+                      await player.play(AssetSource('snapshot.mp3'));
+                      await _initializeControllerFuture;
+                      String newPath =
+                          '${(await getTemporaryDirectory()).path}/${DateFormat('yyyyMMdd_HHmmss_SSS').format(DateTime.now())}.jpg';
+                      _controller.setFocusMode(FocusMode.locked);
+                      final xFile = await _controller.takePicture();
+                      if (!mounted) return;
+                      image = await File(xFile.path).rename(newPath);
+                      debugPrint('\u001b[31m ${image!.path} \u001b[0m');
+                      setState(() => Navigator.pop(context));
+                    } on Exception catch (_) {
+                      debugPrint('\u001b[31m ${_.toString()} \u001b[0m');
+                    }
+                  }),
+            ],
           ),
-          Expanded(
-            child: Container(
-              color: Colors.black54,
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: [
-                  IconButton(
-                      icon: const Icon(
-                        Icons.camera_alt,
-                      ),
-                      iconSize: 60,
-                      onPressed: () async {
-                        try {
-                          ///相機快門音效
-                          final player = AudioPlayer();
-                          await player.play(AssetSource('snapshot.mp3'));
+        ),
+      ],
+    );
+  }
 
-                          ///碼表計時
-                          final Stopwatch stopwatch = Stopwatch();
-                          stopwatch.start();
-
-                          await _initializeControllerFuture;
-                          String newPath =
-                              '${(await getTemporaryDirectory()).path}/${DateFormat('yyyyMMdd_HHmmss_SSS').format(DateTime.now())}.jpg';
-                          _controller.setFocusMode(FocusMode.locked);
-                          final xFile = await _controller.takePicture();
-
-                          if (!mounted) return;
-                          image = await File(xFile.path).rename(newPath);
-                          debugPrint('\u001b[31m ${image!.path} \u001b[0m');
-                          debugPrint(
-                              '\u001b[31m ${stopwatch.elapsedMicroseconds / 1000} ms \u001b[0m');
-                          stopwatch.stop();
-                        } on Exception catch (_) {
-                          _showSnackBar(_.toString());
-                        } finally {
-                          setState(() => Navigator.pop(context)); //離開相機
-                        }
-                      }),
-                ],
-              ),
-            ),
+  Widget landscape() {
+    return Row(
+      children: [
+        FutureBuilder<void>(
+          future: _initializeControllerFuture,
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.done) {
+              return CameraPreview(_controller);
+            } else {
+              // Otherwise, display a loading indicator.
+              return const Center(child: CircularProgressIndicator());
+            }
+          },
+        ),
+        Expanded(
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: [
+              IconButton(
+                  icon: const Icon(
+                    Icons.camera_alt,
+                  ),
+                  iconSize: 60,
+                  onPressed: () async {
+                    try {
+                      ///相機快門音效
+                      final player = AudioPlayer();
+                      await player.play(AssetSource('snapshot.mp3'));
+                      await _initializeControllerFuture;
+                      String newPath =
+                          '${(await getTemporaryDirectory()).path}/${DateFormat('yyyyMMdd_HHmmss_SSS').format(DateTime.now())}.jpg';
+                      _controller.setFocusMode(FocusMode.locked);
+                      final xFile = await _controller.takePicture();
+                      if (!mounted) return;
+                      image = await File(xFile.path).rename(newPath);
+                      debugPrint('\u001b[31m ${image!.path} \u001b[0m');
+                      setState(() => Navigator.pop(context));
+                    } on Exception catch (_) {
+                      _showSnackBar(_.toString());
+                    }
+                  }),
+            ],
           ),
-        ],
-      ),
-      // floatingActionButton: FloatingActionButton(
-      //     onPressed: () async {
-      //       try {
-      //         ///相機快門音效
-      //         final player = AudioPlayer();
-      //         await player.play(AssetSource('camera_sound.mp3'));
-      //
-      //         ///碼表計時
-      //         final Stopwatch stopwatch = Stopwatch();
-      //         stopwatch.start();
-      //
-      //         ///顯示相片下載 dialog
-      //         _showLoadingDialog();
-      //         await _initializeControllerFuture;
-      //         final xFile = await _controller.takePicture();
-      //         if (!mounted) return;
-      //         image = File(xFile.path);
-      //         debugPrint(
-      //             '\u001b[31m ${stopwatch.elapsedMicroseconds / 1000} ms \u001b[0m');
-      //         stopwatch.stop();
-      //       } on Exception catch (_) {
-      //         _showSnackBar(_.toString());
-      //       } finally {
-      //         setState(() {
-      //           Navigator.pop(context); // 進度條dismiss
-      //           Navigator.pop(context); //離開相機
-      //         });
-      //       }
-      //     },
-      //     child: const Icon(Icons.camera_alt),
-      //   ),
+        ),
+      ],
     );
   }
 
@@ -282,7 +301,13 @@ class _TakePhotoExampleState extends State<TakePhotoExample> {
       child: ClipRRect(
         ///是 ClipRRect，不是 ClipRect
         // borderRadius: BorderRadius.circular(12),
-        child: image == null ? null : Image.file(image!, fit: BoxFit.fill),
+        child: image == null
+            ? null
+            : Image.file(
+                image!,
+                fit: BoxFit.fitWidth,
+                alignment: Alignment.topCenter,
+              ),
       ),
     );
   }
@@ -298,7 +323,13 @@ class _TakePhotoExampleState extends State<TakePhotoExample> {
       onScaleStart: () {},
       onScaleStop: () {},
       child: ClipRRect(
-          child: image == null ? null : Image.file(image!, fit: BoxFit.fill)),
+          child: image == null
+              ? null
+              : Image.file(
+                  image!,
+                  fit: BoxFit.fitWidth,
+                  alignment: Alignment.topCenter,
+                )),
     );
   }
 
