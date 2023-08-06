@@ -105,15 +105,16 @@ class _TakePhotoExampleState extends State<TakePhotoExample> {
                   style:
                       ElevatedButton.styleFrom(backgroundColor: Colors.green),
                   child: const Text('自製相機'),
-                  onPressed: () {
+                  onPressed: () async {
                     WidgetsFlutterBinding.ensureInitialized();
-                    availableCameras().then((cameras) {
-                      camera = cameras.first;
-                      _controller = CameraController(
-                        camera,
-                        ResolutionPreset.high,
-                      );
-                      _initializeControllerFuture = _controller.initialize();
+                    final cameras = await availableCameras();
+                    camera = cameras.first;
+                    _controller = CameraController(
+                      camera,
+                      ResolutionPreset.high,
+                    );
+                    _initializeControllerFuture = _controller.initialize();
+                    setState(() {
                       Navigator.push(
                           context,
                           MaterialPageRoute(
@@ -123,25 +124,6 @@ class _TakePhotoExampleState extends State<TakePhotoExample> {
                             ),
                           ));
                     });
-
-                    // WidgetsFlutterBinding.ensureInitialized();
-                    // final cameras = await availableCameras();
-                    // camera = cameras.first;
-                    // _controller = CameraController(
-                    //   camera,
-                    //   ResolutionPreset.high,
-                    // );
-                    // _initializeControllerFuture = _controller.initialize();
-                    // setState(() {
-                    //   Navigator.push(
-                    //       context,
-                    //       MaterialPageRoute(
-                    //         builder: (context) => MaterialApp(
-                    //           theme: ThemeData.dark(),
-                    //           home: takePhotoScreen(),
-                    //         ),
-                    //       ));
-                    // });
                   }),
 
               ///dioUpload
