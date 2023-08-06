@@ -1,5 +1,6 @@
 import 'package:android_id/android_id.dart';
 import 'package:device_info_plus/device_info_plus.dart';
+import 'package:flutter/material.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 String identifierToHex(var identifier) {
@@ -73,4 +74,15 @@ Future<bool> checkPermission() async {
     }
   }
   return true;
+}
+
+void showSnackBar(context, text) {
+  final snackBar = SnackBar(
+    content: text == null ? const Text('text is null') : Text(text),
+    action: SnackBarAction(
+      label: 'undo',
+      onPressed: () {},
+    ),
+  );
+  ScaffoldMessenger.of(context).showSnackBar(snackBar);
 }
