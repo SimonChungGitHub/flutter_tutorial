@@ -29,6 +29,7 @@ class _TakePhotoExampleState extends State<TakePhotoExample> {
   bool zoomMode = false;
   String mode = 'easy_image_viewer';
   late ProgressDialog pd;
+  DateTime? lastPopTime;
 
   @override
   void initState() {
@@ -36,7 +37,6 @@ class _TakePhotoExampleState extends State<TakePhotoExample> {
     //固定該頁面螢幕垂直不旋轉
     SystemChrome.setPreferredOrientations(
         [DeviceOrientation.portraitUp, DeviceOrientation.portraitDown]);
-
     if (zoomMode) {
       mode = 'easy_image_viewer';
     } else {
@@ -105,16 +105,15 @@ class _TakePhotoExampleState extends State<TakePhotoExample> {
                   style:
                       ElevatedButton.styleFrom(backgroundColor: Colors.green),
                   child: const Text('自製相機'),
-                  onPressed: () async {
+                  onPressed: () {
                     WidgetsFlutterBinding.ensureInitialized();
-                    final cameras = await availableCameras();
-                    camera = cameras.first;
-                    _controller = CameraController(
-                      camera,
-                      ResolutionPreset.high,
-                    );
-                    _initializeControllerFuture = _controller.initialize();
-                    setState(() {
+                    availableCameras().then((cameras) {
+                      camera = cameras.first;
+                      _controller = CameraController(
+                        camera,
+                        ResolutionPreset.high,
+                      );
+                      _initializeControllerFuture = _controller.initialize();
                       Navigator.push(
                           context,
                           MaterialPageRoute(
@@ -124,6 +123,25 @@ class _TakePhotoExampleState extends State<TakePhotoExample> {
                             ),
                           ));
                     });
+
+                    // WidgetsFlutterBinding.ensureInitialized();
+                    // final cameras = await availableCameras();
+                    // camera = cameras.first;
+                    // _controller = CameraController(
+                    //   camera,
+                    //   ResolutionPreset.high,
+                    // );
+                    // _initializeControllerFuture = _controller.initialize();
+                    // setState(() {
+                    //   Navigator.push(
+                    //       context,
+                    //       MaterialPageRoute(
+                    //         builder: (context) => MaterialApp(
+                    //           theme: ThemeData.dark(),
+                    //           home: takePhotoScreen(),
+                    //         ),
+                    //       ));
+                    // });
                   }),
 
               ///dioUpload
@@ -216,22 +234,16 @@ class _TakePhotoExampleState extends State<TakePhotoExample> {
                     Icons.camera_alt,
                   ),
                   iconSize: 60,
-                  onPressed: () async {
-                    try {
-                      ///相機快門音效
-                      final player = AudioPlayer();
-                      await player.play(AssetSource('snapshot.mp3'));
-                      await _initializeControllerFuture;
-                      String newPath =
-                          '${(await getTemporaryDirectory()).path}/${DateFormat('yyyyMMdd_HHmmss_SSS').format(DateTime.now())}.jpg';
-                      _controller.setFocusMode(FocusMode.locked);
-                      final xFile = await _controller.takePicture();
-                      if (!mounted) return;
-                      image = await File(xFile.path).rename(newPath);
-                      debugPrint('\u001b[31m ${image!.path} \u001b[0m');
-                      setState(() => Navigator.pop(context));
-                    } on Exception catch (_) {
-                      debugPrint('\u001b[31m ${_.toString()} \u001b[0m');
+                  onPressed: () {
+                    //拍照間隔2秒,避免Exception
+                    if (lastPopTime == null ||
+                        DateTime.now().difference(lastPopTime!) >
+                            const Duration(seconds: 2)) {
+                      onPressAndTakePhoto();
+                      lastPopTime = DateTime.now();
+                    } else {
+                      //如果不注释这行,则强制用户一定要间隔2s后才能成功点击. 而不是以上一次点击成功的时间开始计算.
+                      lastPopTime = DateTime.now();
                     }
                   }),
             ],
@@ -264,22 +276,16 @@ class _TakePhotoExampleState extends State<TakePhotoExample> {
                     Icons.camera_alt,
                   ),
                   iconSize: 60,
-                  onPressed: () async {
-                    try {
-                      ///相機快門音效
-                      final player = AudioPlayer();
-                      await player.play(AssetSource('snapshot.mp3'));
-                      await _initializeControllerFuture;
-                      String newPath =
-                          '${(await getTemporaryDirectory()).path}/${DateFormat('yyyyMMdd_HHmmss_SSS').format(DateTime.now())}.jpg';
-                      _controller.setFocusMode(FocusMode.locked);
-                      final xFile = await _controller.takePicture();
-                      if (!mounted) return;
-                      image = await File(xFile.path).rename(newPath);
-                      debugPrint('\u001b[31m ${image!.path} \u001b[0m');
-                      setState(() => Navigator.pop(context));
-                    } on Exception catch (_) {
-                      _showSnackBar(_.toString());
+                  onPressed: () {
+                    //拍照間隔2秒,避免Exception
+                    if (lastPopTime == null ||
+                        DateTime.now().difference(lastPopTime!) >
+                            const Duration(seconds: 2)) {
+                      onPressAndTakePhoto();
+                      lastPopTime = DateTime.now();
+                    } else {
+                      //如果不注释这行,则强制用户一定要间隔2s后才能成功点击. 而不是以上一次点击成功的时间开始计算.
+                      lastPopTime = DateTime.now();
                     }
                   }),
             ],
@@ -287,6 +293,25 @@ class _TakePhotoExampleState extends State<TakePhotoExample> {
         ),
       ],
     );
+  }
+
+  Future<void> onPressAndTakePhoto() async {
+    try {
+      ///相機快門音效
+      final player = AudioPlayer();
+      await player.play(AssetSource('snapshot.mp3'));
+      await _initializeControllerFuture;
+      String newPath =
+          '${(await getTemporaryDirectory()).path}/${DateFormat('yyyyMMdd_HHmmss_SSS').format(DateTime.now())}.jpg';
+      _controller.setFocusMode(FocusMode.locked);
+      final xFile = await _controller.takePicture();
+      if (!mounted) return;
+      image = await File(xFile.path).rename(newPath);
+      debugPrint('\u001b[31m ${image!.path} \u001b[0m');
+      setState(() => Navigator.pop(context));
+    } on Exception catch (_) {
+      debugPrint('\u001b[31m ${_.toString()} \u001b[0m');
+    }
   }
 
   Widget easyImageViewer() {
@@ -331,17 +356,6 @@ class _TakePhotoExampleState extends State<TakePhotoExample> {
                   alignment: Alignment.topCenter,
                 )),
     );
-  }
-
-  _showSnackBar(text) {
-    final snackBar = SnackBar(
-      content: text == null ? const Text('text is null') : Text(text),
-      action: SnackBarAction(
-        label: 'undo',
-        onPressed: () {},
-      ),
-    );
-    ScaffoldMessenger.of(context).showSnackBar(snackBar);
   }
 
   Future<File> _reSizeImage(File jpgFile, width) async {
