@@ -20,8 +20,6 @@ class CustomCamera extends StatefulWidget {
 }
 
 class CustomCameraState extends State<CustomCamera> {
-  // late CameraController _controller;
-  // late Future<void> _initializeControllerFuture;
   late CameraDescription camera;
   late File image;
 
@@ -31,17 +29,6 @@ class CustomCameraState extends State<CustomCamera> {
     //固定該頁面螢幕垂直不旋轉
     SystemChrome.setPreferredOrientations(
         [DeviceOrientation.portraitUp, DeviceOrientation.portraitDown]);
-    // WidgetsFlutterBinding.ensureInitialized();
-    // availableCameras().then((cameras) async {
-    //   camera = cameras.first;
-    //   _controller = CameraController(
-    //     camera,
-    //     ResolutionPreset.high,
-    //   );
-    //   _initializeControllerFuture = _controller.initialize();
-    // });
-    //
-    // Future.delayed(const Duration(seconds: 10));
   }
 
   @override
