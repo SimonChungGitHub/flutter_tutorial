@@ -35,13 +35,22 @@ class _TakePhotoExampleState extends State<TakePhotoExample> {
   void initState() {
     super.initState();
     //固定該頁面螢幕垂直不旋轉
-    SystemChrome.setPreferredOrientations(
-        [DeviceOrientation.portraitUp, DeviceOrientation.portraitDown]);
+    // SystemChrome.setPreferredOrientations(
+    //     [DeviceOrientation.portraitUp, DeviceOrientation.portraitDown]);
+
+    SystemChrome.setPreferredOrientations([
+      DeviceOrientation.portraitUp,
+      DeviceOrientation.portraitDown,
+      DeviceOrientation.landscapeLeft,
+      DeviceOrientation.landscapeRight
+    ]);
     if (zoomMode) {
       mode = 'easy_image_viewer';
     } else {
       mode = 'zoom_pinch_overlay';
     }
+    debugPrint(
+        '\u001b[31m ================initState==================== \u001b[0m');
   }
 
   @override
@@ -53,8 +62,6 @@ class _TakePhotoExampleState extends State<TakePhotoExample> {
   @override
   Widget build(BuildContext context) {
     pd = ProgressDialog(context: context);
-    SystemChrome.setPreferredOrientations(
-        [DeviceOrientation.portraitUp, DeviceOrientation.portraitDown]);
     return Scaffold(
       appBar: AppBar(
         centerTitle: true,
@@ -63,117 +70,117 @@ class _TakePhotoExampleState extends State<TakePhotoExample> {
         ),
         backgroundColor: Colors.blue,
       ),
-      body: Column(
-        mainAxisAlignment: MainAxisAlignment.start,
-        children: <Widget>[
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            mainAxisSize: MainAxisSize.max,
-            children: [
-              ///image_picker, ps:拍完照返回若有do something(ex:建立縮圖),會導致reBuild UI延遲
-              ElevatedButton(
-                  style:
-                      ElevatedButton.styleFrom(backgroundColor: Colors.green),
-                  child: const Text('image_picker'),
-                  onPressed: () async {
-                    final picker = ImagePicker();
-                    final xFile = await picker.pickImage(
-                        source: ImageSource.camera,
-                        maxWidth: 1024,
-                        maxHeight: 1024,
-                        imageQuality: 100);
-                    debugPrint(
-                        '\u001b[31m 拍照返回xFile ${xFile!.path}. \u001b[0m');
-                    final Stopwatch stopwatch = Stopwatch();
-                    stopwatch.start();
-                    _showLoadingDialog();
-                    await Future.delayed(const Duration(seconds: 1));
-                    File file = File(xFile.path);
-                    String filename = DateFormat('yyyyMMdd_HHmmss_SSS')
-                        .format(DateTime.now());
-                    String newPath = '${file.parent.path}/$filename.jpg';
-                    image = await file.rename(newPath);
-                    debugPrint('\u001b[31m rename ${image!.path}. \u001b[0m');
-                    debugPrint(
-                        '\u001b[31m ${stopwatch.elapsedMicroseconds / 1000} ms \u001b[0m');
-                    stopwatch.stop();
-                    setState(() => Navigator.pop(context));
-                  }),
+      body: body(),
+    );
+  }
 
-              ///自製相機
-              ElevatedButton(
-                  style:
-                      ElevatedButton.styleFrom(backgroundColor: Colors.green),
-                  child: const Text('自製相機'),
-                  onPressed: () async {
-                    WidgetsFlutterBinding.ensureInitialized();
-                    final cameras = await availableCameras();
-                    camera = cameras.first;
-                    _controller = CameraController(
-                      camera,
-                      ResolutionPreset.high,
-                    );
-                    _initializeControllerFuture = _controller.initialize();
-                    setState(() {
-                      Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => MaterialApp(
-                              theme: ThemeData.dark(),
-                              home: takePhotoScreen(),
-                            ),
-                          ));
-                    });
-                  }),
+  Widget body() {
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.start,
+      children: <Widget>[
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          mainAxisSize: MainAxisSize.max,
+          children: [
+            ///image_picker, ps:拍完照返回若有do something(ex:建立縮圖),會導致reBuild UI延遲
+            ElevatedButton(
+                style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
+                child: const Text('image_picker'),
+                onPressed: () async {
+                  final picker = ImagePicker();
+                  final xFile = await picker.pickImage(
+                      source: ImageSource.camera,
+                      maxWidth: 1024,
+                      maxHeight: 1024,
+                      imageQuality: 100);
+                  debugPrint('\u001b[31m 拍照返回xFile ${xFile!.path}. \u001b[0m');
+                  final Stopwatch stopwatch = Stopwatch();
+                  stopwatch.start();
+                  _showLoadingDialog();
+                  await Future.delayed(const Duration(seconds: 1));
+                  File file = File(xFile.path);
+                  String filename =
+                      DateFormat('yyyyMMdd_HHmmss_SSS').format(DateTime.now());
+                  String newPath = '${file.parent.path}/$filename.jpg';
+                  image = await file.rename(newPath);
+                  debugPrint('\u001b[31m rename ${image!.path}. \u001b[0m');
+                  debugPrint(
+                      '\u001b[31m ${stopwatch.elapsedMicroseconds / 1000} ms \u001b[0m');
+                  stopwatch.stop();
+                  setState(() => Navigator.pop(context));
+                }),
 
-              ///dioUpload
-              ElevatedButton(
-                  style:
-                      ElevatedButton.styleFrom(backgroundColor: Colors.green),
-                  child: const Text('上傳'),
-                  onPressed: () async {
-                    final result = await _dioUpload();
-                    if (result) {
-                      final file = await _reSizeImage(image!, 256);
-                      await _dioUploadFileDeleteFile(file);
-                      await image!.delete();
-                      image = null;
-                      setState(() {});
+            ///自製相機
+            ElevatedButton(
+                style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
+                child: const Text('自製相機'),
+                onPressed: () async {
+                  WidgetsFlutterBinding.ensureInitialized();
+                  final cameras = await availableCameras();
+                  camera = cameras.first;
+                  _controller = CameraController(
+                    camera,
+                    ResolutionPreset.high,
+                  );
+                  _initializeControllerFuture = _controller.initialize();
+                  setState(() {
+                    Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => MaterialApp(
+                            theme: ThemeData.dark(),
+                            home: takePhotoScreen(),
+                          ),
+                        ));
+                  });
+                }),
+
+            ///dioUpload
+            ElevatedButton(
+                style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
+                child: const Text('上傳'),
+                onPressed: () async {
+                  final result = await _dioUpload();
+                  if (result) {
+                    final file = await _reSizeImage(image!, 256);
+                    await _dioUploadFileDeleteFile(file);
+                    await image!.delete();
+                    image = null;
+                    setState(() {});
+                  }
+                }),
+          ],
+        ),
+        Row(
+          children: [
+            Switch(
+                value: zoomMode,
+                onChanged: (value) {
+                  setState(() {
+                    zoomMode = !zoomMode;
+                    if (zoomMode) {
+                      mode = 'easy_image_viewer';
+                    } else {
+                      mode = 'zoom_pinch_overlay';
                     }
-                  }),
-            ],
-          ),
-          Row(
-            children: [
-              Switch(
-                  value: zoomMode,
-                  onChanged: (value) {
-                    setState(() {
-                      zoomMode = !zoomMode;
-                      if (zoomMode) {
-                        mode = 'easy_image_viewer';
-                      } else {
-                        mode = 'zoom_pinch_overlay';
-                      }
-                    });
-                  }),
-              Text(
-                mode,
-                style: const TextStyle(fontSize: 20),
-              ),
-            ],
-          ),
-          const SizedBox(
-            width: 100,
-            height: 5,
-          ),
-          Expanded(
-            child: SizedBox(
-                width: MediaQuery.of(context).size.width,
-                child: zoomMode ? easyImageViewer() : zoomPinchOverlay()),
-          ),
-        ],
-      ),
+                  });
+                }),
+            Text(
+              mode,
+              style: const TextStyle(fontSize: 20),
+            ),
+          ],
+        ),
+        const SizedBox(
+          width: 100,
+          height: 5,
+        ),
+        Expanded(
+          child: SizedBox(
+              width: MediaQuery.of(context).size.width,
+              child: zoomMode ? easyImageViewer() : zoomPinchOverlay()),
+        ),
+      ],
     );
   }
 
@@ -181,12 +188,12 @@ class _TakePhotoExampleState extends State<TakePhotoExample> {
   Widget takePhotoScreen() {
     return Scaffold(
       body: OrientationBuilder(builder: (context, orientation) {
-        SystemChrome.setPreferredOrientations([
-          DeviceOrientation.portraitUp,
-          DeviceOrientation.portraitDown,
-          DeviceOrientation.landscapeLeft,
-          DeviceOrientation.landscapeRight
-        ]);
+        // SystemChrome.setPreferredOrientations([
+        //   DeviceOrientation.portraitUp,
+        //   DeviceOrientation.portraitDown,
+        //   DeviceOrientation.landscapeLeft,
+        //   DeviceOrientation.landscapeRight
+        // ]);
         if (orientation == Orientation.landscape) return landscape();
         return portrait();
       }),
