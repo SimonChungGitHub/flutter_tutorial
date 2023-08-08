@@ -123,7 +123,7 @@ class _TakePhotoExampleState extends State<TakePhotoExample> {
                     ResolutionPreset.high,
                   );
                   _initializeControllerFuture = _controller.initialize();
-                  setState(() {
+                  _initializeControllerFuture.then((value) {
                     Navigator.push(
                         context,
                         MaterialPageRoute(
@@ -203,18 +203,22 @@ class _TakePhotoExampleState extends State<TakePhotoExample> {
   Widget portrait() {
     return Column(
       children: [
-        FutureBuilder<void>(
-          future: _initializeControllerFuture,
-          builder: (context, snapshot) {
-            if (snapshot.connectionState == ConnectionState.done) {
-              return CameraPreview(_controller);
-            } else {
-              // Otherwise, display a loading indicator.
-              return const Center(child: CircularProgressIndicator());
-            }
-          },
+        Expanded(
+          flex: 85,
+          child: FutureBuilder<void>(
+            future: _initializeControllerFuture,
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.done) {
+                return CameraPreview(_controller);
+              } else {
+                // Otherwise, display a loading indicator.
+                return const Center(child: CircularProgressIndicator());
+              }
+            },
+          ),
         ),
         Expanded(
+          flex: 15,
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
@@ -245,18 +249,22 @@ class _TakePhotoExampleState extends State<TakePhotoExample> {
   Widget landscape() {
     return Row(
       children: [
-        FutureBuilder<void>(
-          future: _initializeControllerFuture,
-          builder: (context, snapshot) {
-            if (snapshot.connectionState == ConnectionState.done) {
-              return CameraPreview(_controller);
-            } else {
-              // Otherwise, display a loading indicator.
-              return const Center(child: CircularProgressIndicator());
-            }
-          },
+        Expanded(
+          flex: 85,
+          child: FutureBuilder<void>(
+            future: _initializeControllerFuture,
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.done) {
+                return CameraPreview(_controller);
+              } else {
+                // Otherwise, display a loading indicator.
+                return const Center(child: CircularProgressIndicator());
+              }
+            },
+          ),
         ),
         Expanded(
+          flex: 15,
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
@@ -286,14 +294,20 @@ class _TakePhotoExampleState extends State<TakePhotoExample> {
 
   Future<void> onPressAndTakePhoto() async {
     try {
+      await _initializeControllerFuture;
+      //Error: select a camera first.
+      if (!_controller.value.isInitialized) return;
+      // A capture is already pending, do nothing.
+      if (_controller.value.isTakingPicture) return;
+
       ///相機快門音效
       final player = AudioPlayer();
       await player.play(AssetSource('snapshot.mp3'));
-      await _initializeControllerFuture;
-      String newPath =
-          '${(await getTemporaryDirectory()).path}/${DateFormat('yyyyMMdd_HHmmss_SSS').format(DateTime.now())}.jpg';
+
       _controller.setFocusMode(FocusMode.locked);
       final xFile = await _controller.takePicture();
+      String newPath =
+          '${(await getTemporaryDirectory()).path}/${DateFormat('yyyyMMdd_HHmmss_SSS').format(DateTime.now())}.jpg';
       if (!mounted) return;
       image = await File(xFile.path).rename(newPath);
       debugPrint('\u001b[31m ${image!.path} \u001b[0m');
