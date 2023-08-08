@@ -148,7 +148,7 @@ class CustomCameraState extends State<CustomCamera> {
         String newPath =
             '${(await getTemporaryDirectory()).path}/${DateFormat('yyyyMMdd_HHmmss_SSS').format(DateTime.now())}.jpg';
         image = await File(xFile.path).rename(newPath);
-        debugPrint('\u001b[31m ${image!.path} \u001b[0m');
+        debugPrint('\u001b[31m ${image.path} \u001b[0m');
         ///相片存入相簿後刪除檔案
         await GallerySaver.saveImage(image.path);
         image.delete();
