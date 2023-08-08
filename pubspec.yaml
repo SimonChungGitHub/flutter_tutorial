@@ -20,6 +20,8 @@ dependencies:
   path: ^1.8.3
   path_provider: ^2.0.15
   camera: ^0.10.5+2
+  gallery_saver: ^2.3.2
+
   image_picker: ^0.8.7+4
   easy_image_viewer: ^1.2.0
   zoom_pinch_overlay: ^1.4.1+3
