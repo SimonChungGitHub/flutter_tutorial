@@ -1,8 +1,10 @@
 import 'dart:io';
 
+import 'package:camera/camera.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_tutorial/device_info.dart';
+import 'package:flutter_tutorial/example/custom_camera.dart';
 import 'package:flutter_tutorial/example/take_photo.dart';
 import 'package:flutter_tutorial/login.dart';
 import 'package:flutter_tutorial/utils.dart';
@@ -11,6 +13,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 import 'package:nfc_manager/nfc_manager.dart';
 import 'package:sn_progress_dialog/progress_dialog.dart';
+import 'package:stamp_image/stamp_image.dart';
 import 'package:yaml/yaml.dart';
 
 import 'CustomDropdownButton2.dart';
@@ -180,7 +183,7 @@ class _HomeState extends State<Home> {
                     })),
             Row(
               children: [
-                ///take photo
+                ///一次拍照
                 Container(
                   height: 50,
                   padding: const EdgeInsets.fromLTRB(10, 10, 10, 0),
@@ -191,6 +194,38 @@ class _HomeState extends State<Home> {
                           context,
                           MaterialPageRoute(
                               builder: (context) => const TakePhotoExample()));
+                    },
+                  ),
+                ),
+                ///連續拍照
+                Container(
+                  height: 50,
+                  padding: const EdgeInsets.fromLTRB(10, 10, 10, 0),
+                  child: ElevatedButton(
+                    child: const Text('連續拍照'),
+                    onPressed: () async {
+                      WidgetsFlutterBinding.ensureInitialized();
+                      final cameras = await availableCameras();
+                      final camera = cameras.first;
+                      final controller = CameraController(
+                        camera,
+                        ResolutionPreset.high,
+                      );
+                      final initializeControllerFuture =
+                          controller.initialize();
+                      initializeControllerFuture.then((value) {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => MaterialApp(
+                              theme: ThemeData.dark(),
+                              home: CustomCamera(
+                                  initializeControllerFuture, controller),
+                            ),
+                          ),
+                        );
+                      });
+                      // });
                     },
                   ),
                 ),
@@ -208,24 +243,25 @@ class _HomeState extends State<Home> {
                                 builder: (context) => const DialogExample()));
                       }),
                 ),
-
-                ///動畫 button
-                Container(
-                  height: 50,
-                  padding: const EdgeInsets.fromLTRB(10, 10, 10, 0),
-                  child: ElevatedButton(
-                      child: const Text('動畫'),
-                      onPressed: () {
-                        Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                                builder: (context) => const AnimationDialog()));
-                      }),
-                ),
               ],
             ),
 
-            ///take photo
+            ///動畫 button
+            Container(
+              height: 50,
+              padding: const EdgeInsets.fromLTRB(10, 10, 10, 0),
+              child: ElevatedButton(
+                  child: const Text('動畫'),
+                  onPressed: () {
+                    Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (context) => const AnimationDialog()));
+                  }),
+            ),
+
+
+            ///DateTimePicker
             Container(
               height: 50,
               padding: const EdgeInsets.fromLTRB(10, 10, 10, 0),
@@ -240,30 +276,57 @@ class _HomeState extends State<Home> {
               ),
             ),
 
+
+
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
                 TextButton(
-                    onPressed: () {
-                      picker
-                          .pickImage(source: ImageSource.camera)
-                          .then((xFile) {
-                        File file = File(xFile!.path);
-                        _buildImage(file).then((value) {
-                          setState(() {
-                            image = value;
-                          });
-                        });
+                  onPressed: () {
+                    picker.pickImage(source: ImageSource.camera).then((xFile) {
+                      setState(() {
+                        image = null;
                       });
-                    },
-                    child: const Text('img_pick')),
+
+                      File file = File(xFile!.path);
+                      _buildImage(file).then((value) {
+                        image = value;
+                        debugPrint('\u001b[31m bbbb ${value.path} \u001b[0m');
+
+                        StampImage.create(
+                          context: context,
+                          image: value,
+                          savePath: file.parent.path,
+                          saveFile: true,
+                          children: [
+                            Positioned(
+                              bottom: 10,
+                              right: 10,
+                              child: _watermarkItem(),
+                            ),
+                            Positioned(
+                              top: 10,
+                              left: 10,
+                              child: _watermarkItem(),
+                            )
+                          ],
+                          onSuccess: (file2) => setState(() {
+                            // image = file2;
+                            debugPrint(
+                                '\u001b[31m cccccc ${file2.path} \u001b[0m');
+                          }),
+                        );
+                      });
+                    });
+                  },
+                  child: const Text('img_pick'),
+                ),
                 TextButton(
-                    onPressed: () {
+                    onPressed: () async {
                       if (image == null) {
                         ScaffoldMessenger.of(context).showSnackBar(
                             const SnackBar(content: Text("沒有照片可上傳")));
                       } else {
-                        ;
                         _dioUpload();
                         // dioUploadThumbnail();
                       }
@@ -271,11 +334,38 @@ class _HomeState extends State<Home> {
                     child: const Text('dio_upload')),
               ],
             ),
+
             Container(
               child: image == null ? null : Image.file(image!),
             )
           ],
         ));
+  }
+
+  Widget _watermarkItem() {
+    return Padding(
+      padding: const EdgeInsets.all(10),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            DateTime.now().toString(),
+            style: const TextStyle(color: Colors.black, fontSize: 15),
+          ),
+          const SizedBox(height: 5),
+          const Text(
+            "Made By Stamp Image",
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(
+              color: Colors.blue,
+              fontWeight: FontWeight.bold,
+              fontSize: 15,
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   Future<File> _buildImage(file) async {
@@ -290,7 +380,7 @@ class _HomeState extends State<Home> {
 
   Future<void> _dioUpload() async {
     try {
-      if (image == null) return;
+      // if (image == null) return;
       var dio = Dio();
       ProgressDialog pd = ProgressDialog(context: context);
       pd.show(max: 100, msg: '檔案上傳中 請稍後');
@@ -315,8 +405,6 @@ class _HomeState extends State<Home> {
       debugPrint('\u001b[31m $e \u001b[0m');
     }
   }
-
-
 
   Widget drawerWidget() {
     return SizedBox(
@@ -349,7 +437,6 @@ class _HomeState extends State<Home> {
               title: const Text('todo'),
               onTap: () {
 //todo
-
               },
             ),
             ListTile(
@@ -357,12 +444,8 @@ class _HomeState extends State<Home> {
                 Icons.app_registration,
               ),
               title: const Text('todo'),
-              onTap: () {
-
-              },
+              onTap: () {},
             ),
-
-
             ListTile(
               leading: const Icon(
                 Icons.perm_device_info,
