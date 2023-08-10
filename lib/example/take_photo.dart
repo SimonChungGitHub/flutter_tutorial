@@ -6,6 +6,7 @@ import 'package:dio/dio.dart';
 import 'package:easy_image_viewer/easy_image_viewer.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_tutorial/utils.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 import 'package:path_provider/path_provider.dart';
@@ -31,6 +32,14 @@ class _TakePhotoExampleState extends State<TakePhotoExample> {
   late ProgressDialog pd;
   DateTime? lastPopTime;
 
+  double _minAvailableZoom = 1.0;
+  double _maxAvailableZoom = 1.0;
+  double _currentScale = 1.0;
+  double _baseScale = 1.0;
+
+  // Counting pointers (number of user fingers on screen)
+  int _pointers = 0;
+
   @override
   void initState() {
     super.initState();
@@ -51,6 +60,32 @@ class _TakePhotoExampleState extends State<TakePhotoExample> {
     }
     debugPrint(
         '\u001b[31m ================initState==================== \u001b[0m');
+
+    WidgetsFlutterBinding.ensureInitialized();
+    availableCameras().then((cameras) {
+      camera = cameras.first;
+      _controller = CameraController(camera, ResolutionPreset.high,
+          imageFormatGroup: ImageFormatGroup.jpeg);
+      _initializeControllerFuture = _controller.initialize();
+      _initializeControllerFuture.then((value) {
+        _controller
+            .getMaxZoomLevel()
+            .then((double value) => _maxAvailableZoom = value);
+        _controller
+            .getMinZoomLevel()
+            .then((double value) => _minAvailableZoom = value);
+
+        ///If the controller is updated then update the UI.
+        _controller.addListener(() {
+          debugPrint('\u001b[31m listen............. \u001b[0m');
+          if (mounted) setState(() {});
+          if (_controller.value.hasError) {
+            showSnackBar(
+                context, 'Camera error ${_controller.value.errorDescription}');
+          }
+        });
+      });
+    });
   }
 
   @override
@@ -118,10 +153,8 @@ class _TakePhotoExampleState extends State<TakePhotoExample> {
                   WidgetsFlutterBinding.ensureInitialized();
                   final cameras = await availableCameras();
                   camera = cameras.first;
-                  _controller = CameraController(
-                    camera,
-                    ResolutionPreset.high,
-                  );
+                  _controller = CameraController(camera, ResolutionPreset.high,
+                      imageFormatGroup: ImageFormatGroup.jpeg);
                   _initializeControllerFuture = _controller.initialize();
                   _initializeControllerFuture.then((value) {
                     Navigator.push(
@@ -200,6 +233,60 @@ class _TakePhotoExampleState extends State<TakePhotoExample> {
     );
   }
 
+  /// Display the preview from the camera (or a message if the preview is not available).
+  Widget _cameraPreviewWidget(controller) {
+    if (controller == null || !controller.value.isInitialized) {
+      return const Text(
+        'Tap a camera',
+        style: TextStyle(
+          color: Colors.white,
+          fontSize: 24.0,
+          fontWeight: FontWeight.w900,
+        ),
+      );
+    } else {
+      return Listener(
+        onPointerDown: (_) => _pointers++,
+        onPointerUp: (_) => _pointers--,
+        child: CameraPreview(
+          controller!,
+          child: LayoutBuilder(
+              builder: (BuildContext context, BoxConstraints constraints) {
+            return GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onScaleStart: _handleScaleStart,
+              onScaleUpdate: _handleScaleUpdate,
+              onTapDown: (TapDownDetails details) =>
+                  onViewFinderTap(details, constraints),
+            );
+          }),
+        ),
+      );
+    }
+  }
+
+  void _handleScaleStart(ScaleStartDetails details) {
+    _baseScale = _currentScale;
+  }
+
+  Future<void> _handleScaleUpdate(ScaleUpdateDetails details) async {
+    // When there are not exactly two fingers on screen don't scale
+    if (_pointers != 2) return;
+    _currentScale = (_baseScale * details.scale)
+        .clamp(_minAvailableZoom, _maxAvailableZoom);
+    await _controller.setZoomLevel(_currentScale);
+  }
+
+  void onViewFinderTap(TapDownDetails details, BoxConstraints constraints) {
+    final CameraController cameraController = _controller;
+    final Offset offset = Offset(
+      details.localPosition.dx / constraints.maxWidth,
+      details.localPosition.dy / constraints.maxHeight,
+    );
+    cameraController.setExposurePoint(offset);
+    cameraController.setFocusPoint(offset);
+  }
+
   Widget portrait() {
     return Column(
       children: [
@@ -209,7 +296,7 @@ class _TakePhotoExampleState extends State<TakePhotoExample> {
             future: _initializeControllerFuture,
             builder: (context, snapshot) {
               if (snapshot.connectionState == ConnectionState.done) {
-                return CameraPreview(_controller);
+                return _cameraPreviewWidget(_controller);
               } else {
                 // Otherwise, display a loading indicator.
                 return const Center(child: CircularProgressIndicator());
@@ -255,7 +342,7 @@ class _TakePhotoExampleState extends State<TakePhotoExample> {
             future: _initializeControllerFuture,
             builder: (context, snapshot) {
               if (snapshot.connectionState == ConnectionState.done) {
-                return CameraPreview(_controller);
+                return _cameraPreviewWidget(_controller);
               } else {
                 // Otherwise, display a loading indicator.
                 return const Center(child: CircularProgressIndicator());
@@ -299,17 +386,18 @@ class _TakePhotoExampleState extends State<TakePhotoExample> {
       if (!_controller.value.isInitialized) return;
       // A capture is already pending, do nothing.
       if (_controller.value.isTakingPicture) return;
+      await _controller.setFocusMode(FocusMode.locked);
+      final xFile = await _controller.takePicture();
+      String newPath =
+          '${(await getTemporaryDirectory()).path}/${DateFormat('yyyyMMdd_HHmmss_SSS').format(DateTime.now())}.jpg';
+      await xFile.saveTo(newPath);
+      image = File(newPath);
+      await File(xFile.path).delete();
 
       ///相機快門音效
       final player = AudioPlayer();
       await player.play(AssetSource('snapshot.mp3'));
-
-      _controller.setFocusMode(FocusMode.locked);
-      final xFile = await _controller.takePicture();
-      String newPath =
-          '${(await getTemporaryDirectory()).path}/${DateFormat('yyyyMMdd_HHmmss_SSS').format(DateTime.now())}.jpg';
       if (!mounted) return;
-      image = await File(xFile.path).rename(newPath);
       debugPrint('\u001b[31m ${image!.path} \u001b[0m');
       setState(() => Navigator.pop(context));
     } on Exception catch (_) {
