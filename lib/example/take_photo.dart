@@ -443,7 +443,7 @@ class _TakePhotoExampleState extends State<TakePhotoExample> {
               ? null
               : Image.file(
                   image!,
-                  fit: BoxFit.fitWidth,
+                  fit: BoxFit.fill,
                   alignment: Alignment.topCenter,
                 )),
     );
