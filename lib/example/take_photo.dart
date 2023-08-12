@@ -120,7 +120,7 @@ class _TakePhotoExampleState extends State<TakePhotoExample> {
             ///image_picker, ps:拍完照返回若有do something(ex:建立縮圖),會導致reBuild UI延遲
             ElevatedButton(
                 style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
-                child: const Text('image_picker'),
+                child: const Text('系統相機'),
                 onPressed: () async {
                   final picker = ImagePicker();
                   final xFile = await picker.pickImage(
@@ -162,7 +162,7 @@ class _TakePhotoExampleState extends State<TakePhotoExample> {
                         MaterialPageRoute(
                           builder: (context) => MaterialApp(
                             theme: ThemeData.dark(),
-                            home: takePhotoScreen(),
+                            home: _openCamera(),
                           ),
                         ));
                   });
@@ -217,23 +217,7 @@ class _TakePhotoExampleState extends State<TakePhotoExample> {
     );
   }
 
-  ///自製相機
-  Widget takePhotoScreen() {
-    return Scaffold(
-      body: OrientationBuilder(builder: (context, orientation) {
-        // SystemChrome.setPreferredOrientations([
-        //   DeviceOrientation.portraitUp,
-        //   DeviceOrientation.portraitDown,
-        //   DeviceOrientation.landscapeLeft,
-        //   DeviceOrientation.landscapeRight
-        // ]);
-        if (orientation == Orientation.landscape) return landscape();
-        return portrait();
-      }),
-    );
-  }
-
-  /// Display the preview from the camera (or a message if the preview is not available).
+  ///相機預覽
   Widget _cameraPreviewWidget(controller) {
     if (controller == null || !controller.value.isInitialized) {
       return const Text(
@@ -257,7 +241,7 @@ class _TakePhotoExampleState extends State<TakePhotoExample> {
               onScaleStart: _handleScaleStart,
               onScaleUpdate: _handleScaleUpdate,
               onTapDown: (TapDownDetails details) =>
-                  onViewFinderTap(details, constraints),
+                  _onViewFinderTap(details, constraints),
             );
           }),
         ),
@@ -277,7 +261,7 @@ class _TakePhotoExampleState extends State<TakePhotoExample> {
     await _controller.setZoomLevel(_currentScale);
   }
 
-  void onViewFinderTap(TapDownDetails details, BoxConstraints constraints) {
+  void _onViewFinderTap(TapDownDetails details, BoxConstraints constraints) {
     final CameraController cameraController = _controller;
     final Offset offset = Offset(
       details.localPosition.dx / constraints.maxWidth,
@@ -287,105 +271,61 @@ class _TakePhotoExampleState extends State<TakePhotoExample> {
     cameraController.setFocusPoint(offset);
   }
 
-  Widget portrait() {
-    return Column(
-      children: [
-        Expanded(
-          flex: 85,
-          child: FutureBuilder<void>(
-            future: _initializeControllerFuture,
-            builder: (context, snapshot) {
-              if (snapshot.connectionState == ConnectionState.done) {
-                return _cameraPreviewWidget(_controller);
-              } else {
-                // Otherwise, display a loading indicator.
-                return const Center(child: CircularProgressIndicator());
-              }
-            },
-          ),
-        ),
-        Expanded(
-          flex: 15,
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: [
-              IconButton(
-                  icon: const Icon(
-                    Icons.camera_alt,
-                  ),
-                  iconSize: 60,
-                  onPressed: () {
-                    //拍照間隔2秒,避免Exception
-                    if (lastPopTime == null ||
-                        DateTime.now().difference(lastPopTime!) >
-                            const Duration(seconds: 2)) {
-                      onPressAndTakePhoto();
-                      lastPopTime = DateTime.now();
-                    } else {
-                      //如果不注释这行,则强制用户一定要间隔2s后才能成功点击. 而不是以上一次点击成功的时间开始计算.
-                      lastPopTime = DateTime.now();
-                    }
-                  }),
-            ],
-          ),
-        ),
-      ],
+  ///開啟自製相機 (相機預覽 + 拍照按鈕)
+  Widget _openCamera() {
+    return Scaffold(
+      body: FutureBuilder<void>(
+          future: _initializeControllerFuture,
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.done) {
+              return OrientationBuilder(builder: (context, orientation) {
+                if (orientation == Orientation.landscape) {
+                  return Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: [
+                      _cameraPreviewWidget(_controller),
+                      IconButton(
+                          icon: const Icon(
+                            Icons.camera_alt,
+                          ),
+                          iconSize: 60,
+                          onPressed: () => _takePicture()),
+                    ],
+                  );
+                } else {
+                  return Column(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: [
+                      _cameraPreviewWidget(_controller),
+                      IconButton(
+                          icon: const Icon(
+                            Icons.camera_alt,
+                          ),
+                          iconSize: 60,
+                          onPressed: () => _takePicture()),
+                    ],
+                  );
+                }
+              });
+            } else {
+              return const Center(child: CircularProgressIndicator());
+            }
+          }),
     );
   }
 
-  Widget landscape() {
-    return Row(
-      children: [
-        Expanded(
-          flex: 85,
-          child: FutureBuilder<void>(
-            future: _initializeControllerFuture,
-            builder: (context, snapshot) {
-              if (snapshot.connectionState == ConnectionState.done) {
-                return _cameraPreviewWidget(_controller);
-              } else {
-                // Otherwise, display a loading indicator.
-                return const Center(child: CircularProgressIndicator());
-              }
-            },
-          ),
-        ),
-        Expanded(
-          flex: 15,
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: [
-              IconButton(
-                  icon: const Icon(
-                    Icons.camera_alt,
-                  ),
-                  iconSize: 60,
-                  onPressed: () {
-                    //拍照間隔2秒,避免Exception
-                    if (lastPopTime == null ||
-                        DateTime.now().difference(lastPopTime!) >
-                            const Duration(seconds: 2)) {
-                      onPressAndTakePhoto();
-                      lastPopTime = DateTime.now();
-                    } else {
-                      //如果不注释这行,则强制用户一定要间隔2s后才能成功点击. 而不是以上一次点击成功的时间开始计算.
-                      lastPopTime = DateTime.now();
-                    }
-                  }),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-
-  Future<void> onPressAndTakePhoto() async {
+  Future<void> _takePicture() async {
     try {
       await _initializeControllerFuture;
-      //Error: select a camera first.
-      if (!_controller.value.isInitialized) return;
+      if (!_controller.value.isInitialized) {
+        await _controller.initialize();
+      }
       // A capture is already pending, do nothing.
       if (_controller.value.isTakingPicture) return;
+
+      ///相機快門音效
+      final player = AudioPlayer();
+      await player.play(AssetSource('snapshot.mp3'));
       await _controller.setFocusMode(FocusMode.locked);
       final xFile = await _controller.takePicture();
       String newPath =
@@ -393,11 +333,6 @@ class _TakePhotoExampleState extends State<TakePhotoExample> {
       await xFile.saveTo(newPath);
       image = File(newPath);
       await File(xFile.path).delete();
-
-      ///相機快門音效
-      final player = AudioPlayer();
-      await player.play(AssetSource('snapshot.mp3'));
-      if (!mounted) return;
       debugPrint('\u001b[31m ${image!.path} \u001b[0m');
       setState(() => Navigator.pop(context));
     } on Exception catch (_) {
@@ -405,6 +340,7 @@ class _TakePhotoExampleState extends State<TakePhotoExample> {
     }
   }
 
+  ///開啟全螢幕畫面做圖片縮放
   Widget easyImageViewer() {
     return GestureDetector(
       onTap: () {
@@ -428,6 +364,7 @@ class _TakePhotoExampleState extends State<TakePhotoExample> {
     );
   }
 
+  ///直接對圖片進行縮放
   Widget zoomPinchOverlay() {
     return ZoomOverlay(
       modalBarrierColor: Colors.black12,
