@@ -14,10 +14,10 @@ class CustomCamera extends StatefulWidget {
   State<CustomCamera> createState() => CustomCameraState();
 }
 
-class CustomCameraState extends State<CustomCamera> {
+class CustomCameraState extends State<CustomCamera>
+    with WidgetsBindingObserver {
   late CameraController _controller;
   Future<void>? _initializeControllerFuture;
-
   double _minAvailableZoom = 1.0;
   double _maxAvailableZoom = 1.0;
   double _currentScale = 1.0;
@@ -27,13 +27,13 @@ class CustomCameraState extends State<CustomCamera> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     try {
       WidgetsFlutterBinding.ensureInitialized();
       availableCameras().then((cameras) async {
         final camera = cameras.first;
         _controller = CameraController(camera, ResolutionPreset.high,
             imageFormatGroup: ImageFormatGroup.jpeg);
-        await _controller.initialize();
         _initializeControllerFuture = _controller.initialize();
         await _initializeControllerFuture;
         setState(() {});
@@ -54,17 +54,26 @@ class CustomCameraState extends State<CustomCamera> {
           }
         });
       });
-    } on Exception catch(_) {
-      debugPrint(
-          '\u001b[31m Camera error ${_.toString()} \u001b[0m');
+    } on Exception catch (_) {
+      debugPrint('\u001b[31m Camera error ${_.toString()} \u001b[0m');
     }
-
   }
 
   @override
   void dispose() {
     _controller.dispose();
     super.dispose();
+  }
+
+  ///暫不知用在何處適合,繼承 WidgetsBindingObserver
+  ///init: WidgetsBinding.instance.addObserver(this);
+  @override
+  Future<void> didChangeAppLifecycleState(AppLifecycleState state) async {
+    if (state == AppLifecycleState.inactive) {
+      debugPrint('\u001b[31m app inactive \u001b[0m');
+    } else {
+      debugPrint('\u001b[31m app active \u001b[0m');
+    }
   }
 
   @override
@@ -89,18 +98,36 @@ class CustomCameraState extends State<CustomCamera> {
       return Listener(
         onPointerDown: (_) => _pointers++,
         onPointerUp: (_) => _pointers--,
-        child: CameraPreview(
-          controller!,
-          child: LayoutBuilder(
-              builder: (BuildContext context, BoxConstraints constraints) {
-            return GestureDetector(
-              behavior: HitTestBehavior.opaque,
-              onScaleStart: _handleScaleStart,
-              onScaleUpdate: _handleScaleUpdate,
-              onTapDown: (TapDownDetails details) =>
-                  _onViewFinderTap(details, constraints),
-            );
-          }),
+        child: Stack(
+          alignment: AlignmentDirectional.center,
+          fit: StackFit.loose,
+          children: [
+            CameraPreview(
+              controller!,
+              child: LayoutBuilder(
+                  builder: (BuildContext context, BoxConstraints constraints) {
+                return GestureDetector(
+                  behavior: HitTestBehavior.opaque,
+                  onScaleStart: _handleScaleStart,
+                  onScaleUpdate: _handleScaleUpdate,
+                  onTapDown: (TapDownDetails details) =>
+                      _onViewFinderTap(details, constraints),
+                );
+              }),
+            ),
+            if (_pointers == 2)
+              CircleAvatar(
+                backgroundColor: Colors.black45,
+                radius: 50.0,
+                child: Text(
+                  'x${_currentScale.toStringAsFixed(1)}',
+                  style: const TextStyle(
+                      fontSize: 30,
+                      fontWeight: FontWeight.w800,
+                      color: Colors.white),
+                ),
+              )
+          ],
         ),
       );
     }
@@ -116,6 +143,10 @@ class CustomCameraState extends State<CustomCamera> {
     _currentScale = (_baseScale * details.scale)
         .clamp(_minAvailableZoom, _maxAvailableZoom);
     await _controller.setZoomLevel(_currentScale);
+    setState(() {
+      debugPrint(
+          '\u001b[31m 變焦倍率: x${_currentScale.toStringAsFixed(1)} \u001b[0m');
+    });
   }
 
   void _onViewFinderTap(TapDownDetails details, BoxConstraints constraints) {
