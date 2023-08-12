@@ -9,14 +9,12 @@ import 'package:path_provider/path_provider.dart';
 class CustomCameraOneShot extends StatefulWidget {
   const CustomCameraOneShot({super.key});
 
-
   @override
   State<CustomCameraOneShot> createState() => CustomCameraOneShotState();
 }
 
 class CustomCameraOneShotState extends State<CustomCameraOneShot>
     with WidgetsBindingObserver {
-
   late CameraController _controller;
   Future<void>? _initializeControllerFuture;
   double _minAvailableZoom = 1.0;
@@ -29,12 +27,6 @@ class CustomCameraOneShotState extends State<CustomCameraOneShot>
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-    // SystemChrome.setPreferredOrientations([
-    //   DeviceOrientation.portraitUp,
-    //   DeviceOrientation.portraitDown,
-    //   DeviceOrientation.landscapeRight,
-    //   DeviceOrientation.landscapeLeft
-    // ]);
     try {
       WidgetsFlutterBinding.ensureInitialized();
       availableCameras().then((cameras) async {
@@ -79,16 +71,7 @@ class CustomCameraOneShotState extends State<CustomCameraOneShot>
   Future<void> didChangeAppLifecycleState(AppLifecycleState state) async {
     if (state == AppLifecycleState.inactive) {
       debugPrint('\u001b[31m app inactive \u001b[0m');
-      setState(() {
-        Navigator.of(context).pop();
-      });
-      // Navigator.push(
-      //     context,
-      //     MaterialPageRoute(
-      //       builder: (context) => const MaterialApp(
-      //         home: TakePhotoExample(image: null),
-      //       ),
-      //     ));
+      setState(() => Navigator.of(context).pop());
     } else {
       debugPrint('\u001b[31m app active \u001b[0m');
     }
