@@ -14,31 +14,23 @@ import 'package:sn_progress_dialog/progress_dialog.dart';
 import 'package:zoom_pinch_overlay/zoom_pinch_overlay.dart';
 import 'package:image/image.dart' as img;
 import '../config.dart';
+import 'custom_camera_one_shot.dart';
 
 class TakePhotoExample extends StatefulWidget {
-  const TakePhotoExample({super.key});
+  const TakePhotoExample({super.key, this.image});
+
+  final File? image;
 
   @override
   State<TakePhotoExample> createState() => _TakePhotoExampleState();
 }
 
 class _TakePhotoExampleState extends State<TakePhotoExample> {
-  late CameraController _controller;
-  late Future<void> _initializeControllerFuture;
-  late CameraDescription camera;
   File? image;
   bool zoomMode = false;
   String mode = 'easy_image_viewer';
   late ProgressDialog pd;
   DateTime? lastPopTime;
-
-  double _minAvailableZoom = 1.0;
-  double _maxAvailableZoom = 1.0;
-  double _currentScale = 1.0;
-  double _baseScale = 1.0;
-
-  // Counting pointers (number of user fingers on screen)
-  int _pointers = 0;
 
   @override
   void initState() {
@@ -47,12 +39,13 @@ class _TakePhotoExampleState extends State<TakePhotoExample> {
     // SystemChrome.setPreferredOrientations(
     //     [DeviceOrientation.portraitUp, DeviceOrientation.portraitDown]);
 
-    SystemChrome.setPreferredOrientations([
-      DeviceOrientation.portraitUp,
-      DeviceOrientation.portraitDown,
-      DeviceOrientation.landscapeLeft,
-      DeviceOrientation.landscapeRight
-    ]);
+    image = widget.image;
+    // SystemChrome.setPreferredOrientations([
+    //   DeviceOrientation.portraitUp,
+    //   DeviceOrientation.portraitDown,
+    //   DeviceOrientation.landscapeLeft,
+    //   DeviceOrientation.landscapeRight
+    // ]);
     if (zoomMode) {
       mode = 'easy_image_viewer';
     } else {
@@ -61,36 +54,17 @@ class _TakePhotoExampleState extends State<TakePhotoExample> {
     debugPrint(
         '\u001b[31m ================initState==================== \u001b[0m');
 
-    WidgetsFlutterBinding.ensureInitialized();
-    availableCameras().then((cameras) {
-      camera = cameras.first;
-      _controller = CameraController(camera, ResolutionPreset.high,
-          imageFormatGroup: ImageFormatGroup.jpeg);
-      _initializeControllerFuture = _controller.initialize();
-      _initializeControllerFuture.then((value) {
-        _controller
-            .getMaxZoomLevel()
-            .then((double value) => _maxAvailableZoom = value);
-        _controller
-            .getMinZoomLevel()
-            .then((double value) => _minAvailableZoom = value);
-
-        ///If the controller is updated then update the UI.
-        _controller.addListener(() {
-          debugPrint('\u001b[31m listen............. \u001b[0m');
-          if (mounted) setState(() {});
-          if (_controller.value.hasError) {
-            showSnackBar(
-                context, 'Camera error ${_controller.value.errorDescription}');
-          }
-        });
-      });
-    });
+    setState(() {});
   }
 
   @override
   void dispose() {
-    _controller.dispose();
+    SystemChrome.setPreferredOrientations([
+      DeviceOrientation.portraitUp,
+      DeviceOrientation.portraitDown,
+      DeviceOrientation.landscapeRight,
+      DeviceOrientation.landscapeLeft
+    ]);
     super.dispose();
   }
 
@@ -142,29 +116,23 @@ class _TakePhotoExampleState extends State<TakePhotoExample> {
                   debugPrint(
                       '\u001b[31m ${stopwatch.elapsedMicroseconds / 1000} ms \u001b[0m');
                   stopwatch.stop();
-                  setState(() => Navigator.pop(context));
+                  setState(() => Navigator.of(context).pop());
+                  setState(() {});
                 }),
 
             ///自製相機
             ElevatedButton(
                 style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
                 child: const Text('自製相機'),
-                onPressed: () async {
-                  WidgetsFlutterBinding.ensureInitialized();
-                  final cameras = await availableCameras();
-                  camera = cameras.first;
-                  _controller = CameraController(camera, ResolutionPreset.high,
-                      imageFormatGroup: ImageFormatGroup.jpeg);
-                  _initializeControllerFuture = _controller.initialize();
-                  _initializeControllerFuture.then((value) {
-                    Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => MaterialApp(
-                            theme: ThemeData.dark(),
-                            home: _openCamera(),
-                          ),
-                        ));
+                onPressed: () {
+                  Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const CustomCameraOneShot(),
+                      )).then((value) {
+                    setState(() {
+                      image = value;
+                    });
                   });
                 }),
 
@@ -175,11 +143,13 @@ class _TakePhotoExampleState extends State<TakePhotoExample> {
                 onPressed: () async {
                   final result = await _dioUpload();
                   if (result) {
-                    final file = await _reSizeImage(image!, 256);
-                    await _dioUploadFileDeleteFile(file);
+                    // final file = await _reSizeImage(image!, 256);
+                    // await _dioUploadFileDeleteFile(file);
                     await image!.delete();
                     image = null;
-                    setState(() {});
+                    setState(() {
+                      // Navigator.of(context).pop();
+                    });
                   }
                 }),
           ],
@@ -215,129 +185,6 @@ class _TakePhotoExampleState extends State<TakePhotoExample> {
         ),
       ],
     );
-  }
-
-  ///相機預覽
-  Widget _cameraPreviewWidget(controller) {
-    if (controller == null || !controller.value.isInitialized) {
-      return const Text(
-        'Tap a camera',
-        style: TextStyle(
-          color: Colors.white,
-          fontSize: 24.0,
-          fontWeight: FontWeight.w900,
-        ),
-      );
-    } else {
-      return Listener(
-        onPointerDown: (_) => _pointers++,
-        onPointerUp: (_) => _pointers--,
-        child: CameraPreview(
-          controller!,
-          child: LayoutBuilder(
-              builder: (BuildContext context, BoxConstraints constraints) {
-            return GestureDetector(
-              behavior: HitTestBehavior.opaque,
-              onScaleStart: _handleScaleStart,
-              onScaleUpdate: _handleScaleUpdate,
-              onTapDown: (TapDownDetails details) =>
-                  _onViewFinderTap(details, constraints),
-            );
-          }),
-        ),
-      );
-    }
-  }
-
-  void _handleScaleStart(ScaleStartDetails details) {
-    _baseScale = _currentScale;
-  }
-
-  Future<void> _handleScaleUpdate(ScaleUpdateDetails details) async {
-    // When there are not exactly two fingers on screen don't scale
-    if (_pointers != 2) return;
-    _currentScale = (_baseScale * details.scale)
-        .clamp(_minAvailableZoom, _maxAvailableZoom);
-    await _controller.setZoomLevel(_currentScale);
-  }
-
-  void _onViewFinderTap(TapDownDetails details, BoxConstraints constraints) {
-    final CameraController cameraController = _controller;
-    final Offset offset = Offset(
-      details.localPosition.dx / constraints.maxWidth,
-      details.localPosition.dy / constraints.maxHeight,
-    );
-    cameraController.setExposurePoint(offset);
-    cameraController.setFocusPoint(offset);
-  }
-
-  ///開啟自製相機 (相機預覽 + 拍照按鈕)
-  Widget _openCamera() {
-    return Scaffold(
-      body: FutureBuilder<void>(
-          future: _initializeControllerFuture,
-          builder: (context, snapshot) {
-            if (snapshot.connectionState == ConnectionState.done) {
-              return OrientationBuilder(builder: (context, orientation) {
-                if (orientation == Orientation.landscape) {
-                  return Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    children: [
-                      _cameraPreviewWidget(_controller),
-                      IconButton(
-                          icon: const Icon(
-                            Icons.camera_alt,
-                          ),
-                          iconSize: 60,
-                          onPressed: () => _takePicture()),
-                    ],
-                  );
-                } else {
-                  return Column(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    children: [
-                      _cameraPreviewWidget(_controller),
-                      IconButton(
-                          icon: const Icon(
-                            Icons.camera_alt,
-                          ),
-                          iconSize: 60,
-                          onPressed: () => _takePicture()),
-                    ],
-                  );
-                }
-              });
-            } else {
-              return const Center(child: CircularProgressIndicator());
-            }
-          }),
-    );
-  }
-
-  Future<void> _takePicture() async {
-    try {
-      await _initializeControllerFuture;
-      if (!_controller.value.isInitialized) {
-        await _controller.initialize();
-      }
-      // A capture is already pending, do nothing.
-      if (_controller.value.isTakingPicture) return;
-
-      ///相機快門音效
-      final player = AudioPlayer();
-      await player.play(AssetSource('snapshot.mp3'));
-      await _controller.setFocusMode(FocusMode.locked);
-      final xFile = await _controller.takePicture();
-      String newPath =
-          '${(await getTemporaryDirectory()).path}/${DateFormat('yyyyMMdd_HHmmss_SSS').format(DateTime.now())}.jpg';
-      await xFile.saveTo(newPath);
-      image = File(newPath);
-      await File(xFile.path).delete();
-      debugPrint('\u001b[31m ${image!.path} \u001b[0m');
-      setState(() => Navigator.pop(context));
-    } on Exception catch (_) {
-      debugPrint('\u001b[31m ${_.toString()} \u001b[0m');
-    }
   }
 
   ///開啟全螢幕畫面做圖片縮放
@@ -380,7 +227,7 @@ class _TakePhotoExampleState extends State<TakePhotoExample> {
               ? null
               : Image.file(
                   image!,
-                  fit: BoxFit.fill,
+                  fit: BoxFit.contain,
                   alignment: Alignment.topCenter,
                 )),
     );
@@ -432,7 +279,14 @@ class _TakePhotoExampleState extends State<TakePhotoExample> {
       pd.show(max: 100, msg: '檔案上傳 請稍後');
       await Future.delayed(const Duration(seconds: 1));
       //todo watermark
-      var dio = Dio();
+
+      BaseOptions options = BaseOptions(
+        receiveDataWhenStatusError: true,
+        connectTimeout: const Duration(seconds: 3),
+        receiveTimeout: const Duration(seconds: 5),
+      );
+
+      var dio = Dio(options);
       FormData formData = FormData.fromMap(
           {"dept": "temp", "file": await MultipartFile.fromFile(image!.path)});
       final response = await dio.post(
@@ -447,6 +301,8 @@ class _TakePhotoExampleState extends State<TakePhotoExample> {
       return bool.parse(response.data.toString());
     } on Exception catch (_) {
       debugPrint('\u001b[31m ${_.toString()} \u001b[0m');
+    } finally {
+      pd.close();
     }
     return false;
   }
