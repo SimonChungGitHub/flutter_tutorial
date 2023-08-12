@@ -14,6 +14,7 @@ import 'package:sn_progress_dialog/progress_dialog.dart';
 import 'package:zoom_pinch_overlay/zoom_pinch_overlay.dart';
 import 'package:image/image.dart' as img;
 import '../config.dart';
+import 'animation.dart';
 import 'custom_camera_one_shot.dart';
 
 class TakePhotoExample extends StatefulWidget {
@@ -71,6 +72,8 @@ class _TakePhotoExampleState extends State<TakePhotoExample> {
   @override
   Widget build(BuildContext context) {
     pd = ProgressDialog(context: context);
+    // SystemChrome.setPreferredOrientations(
+    //     [DeviceOrientation.portraitUp, DeviceOrientation.portraitDown]);
     return Scaffold(
       appBar: AppBar(
         centerTitle: true,
@@ -125,6 +128,12 @@ class _TakePhotoExampleState extends State<TakePhotoExample> {
                 style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
                 child: const Text('自製相機'),
                 onPressed: () {
+                  SystemChrome.setPreferredOrientations([
+                    DeviceOrientation.portraitUp,
+                    DeviceOrientation.portraitDown,
+                    DeviceOrientation.landscapeRight,
+                    DeviceOrientation.landscapeLeft
+                  ]);
                   Navigator.push(
                       context,
                       MaterialPageRoute(
@@ -132,6 +141,10 @@ class _TakePhotoExampleState extends State<TakePhotoExample> {
                       )).then((value) {
                     setState(() {
                       image = value;
+                      SystemChrome.setPreferredOrientations([
+                        DeviceOrientation.portraitUp,
+                        DeviceOrientation.portraitDown
+                      ]);
                     });
                   });
                 }),
@@ -141,6 +154,7 @@ class _TakePhotoExampleState extends State<TakePhotoExample> {
                 style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
                 child: const Text('上傳'),
                 onPressed: () async {
+                  if (image == null) return;
                   final result = await _dioUpload();
                   if (result) {
                     // final file = await _reSizeImage(image!, 256);
@@ -148,7 +162,15 @@ class _TakePhotoExampleState extends State<TakePhotoExample> {
                     await image!.delete();
                     image = null;
                     setState(() {
-                      // Navigator.of(context).pop();
+                      showDialog(
+                          context: context,
+                          builder: (_) => const ShowAnimDialog(success: true));
+                    });
+                  } else {
+                    setState(() {
+                      showDialog(
+                          context: context,
+                          builder: (_) => const ShowAnimDialog(success: false));
                     });
                   }
                 }),
@@ -301,6 +323,7 @@ class _TakePhotoExampleState extends State<TakePhotoExample> {
       return bool.parse(response.data.toString());
     } on Exception catch (_) {
       debugPrint('\u001b[31m ${_.toString()} \u001b[0m');
+      showSnackBar(context, _.toString());
     } finally {
       pd.close();
     }

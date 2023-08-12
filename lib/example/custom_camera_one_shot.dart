@@ -172,29 +172,43 @@ class CustomCameraOneShotState extends State<CustomCameraOneShot>
                 if (orientation == Orientation.landscape) {
                   return Row(
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    mainAxisSize: MainAxisSize.max,
                     children: [
-                      _cameraPreviewWidget(_controller),
-                      IconButton(
-                          icon: const Icon(
-                            Icons.camera_alt,
-                          ),
-                          iconSize: 60,
-                          color: Colors.white,
-                          onPressed: () => takePicture()),
+                      Expanded(
+                        flex: 85,
+                        child: _cameraPreviewWidget(_controller),
+                      ),
+                      Expanded(
+                        flex: 15,
+                        child: IconButton(
+                            icon: const Icon(
+                              Icons.camera_alt,
+                            ),
+                            iconSize: 60,
+                            color: Colors.white,
+                            onPressed: () => takePicture()),
+                      ),
                     ],
                   );
                 } else {
                   return Column(
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    mainAxisSize: MainAxisSize.max,
                     children: [
-                      _cameraPreviewWidget(_controller),
-                      IconButton(
-                          icon: const Icon(
-                            Icons.camera_alt,
-                          ),
-                          iconSize: 60,
-                          color: Colors.white,
-                          onPressed: () => takePicture()),
+                      Expanded(
+                        flex: 85,
+                        child: _cameraPreviewWidget(_controller),
+                      ),
+                      Expanded(
+                        flex: 15,
+                        child: IconButton(
+                            icon: const Icon(
+                              Icons.camera_alt,
+                            ),
+                            iconSize: 60,
+                            color: Colors.white,
+                            onPressed: () => takePicture()),
+                      ),
                     ],
                   );
                 }
