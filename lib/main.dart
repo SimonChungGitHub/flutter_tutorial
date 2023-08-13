@@ -5,6 +5,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_tutorial/device_info.dart';
 import 'package:flutter_tutorial/example/custom_camera.dart';
+import 'package:flutter_tutorial/example/gallery.dart';
 import 'package:flutter_tutorial/example/take_photo.dart';
 import 'package:flutter_tutorial/login.dart';
 import 'package:flutter_tutorial/utils.dart';
@@ -34,9 +35,10 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     loadAsset(context);
-    return const MaterialApp(
+    return MaterialApp(
       title: _title,
-      home: Home(),
+      theme: ThemeData.dark(),
+      home: const Home(),
       debugShowCheckedModeBanner: false,
     );
   }
@@ -182,68 +184,63 @@ class _HomeState extends State<Home> {
                       setState(() => selectedValue = value);
                     })),
             Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
                 ///一次拍照
-                Container(
-                  height: 50,
-                  padding: const EdgeInsets.fromLTRB(10, 10, 10, 0),
-                  child: ElevatedButton(
-                    child: const Text('take photo'),
-                    onPressed: () {
-                      Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                              builder: (context) => const TakePhotoExample()));
-                    },
-                  ),
-                ),
-                ///連續拍照
-                Container(
-                  height: 50,
-                  padding: const EdgeInsets.fromLTRB(10, 10, 10, 0),
-                  child: ElevatedButton(
-                    child: const Text('連續拍照'),
-                    onPressed: () async {
-                      WidgetsFlutterBinding.ensureInitialized();
-                      final cameras = await availableCameras();
-                      final camera = cameras.first;
-                      final controller = CameraController(
-                        camera,
-                        ResolutionPreset.high,
-                      );
-                      final initializeControllerFuture =
-                          controller.initialize();
-                      initializeControllerFuture.then((value) {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => MaterialApp(
-                              theme: ThemeData.dark(),
-                              home: CustomCamera(
-                                  initializeControllerFuture, controller),
-                            ),
-                          ),
-                        );
-                      });
-                      // });
-                    },
-                  ),
+                ElevatedButton(
+                  child: const Text('一次拍照'),
+                  onPressed: () {
+                    Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (context) => const TakePhotoExample()));
+                  },
                 ),
 
-                ///dialog
-                Container(
-                  height: 50,
-                  padding: const EdgeInsets.fromLTRB(10, 10, 10, 0),
-                  child: ElevatedButton(
-                      child: const Text('dialog'),
-                      onPressed: () {
+                ///連續拍照
+                ElevatedButton(
+                  child: const Text('連續拍照'),
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => MaterialApp(
+                          theme: ThemeData.dark(),
+                          home: const CustomCamera(),
+                        ),
+                      ),
+                    );
+                  },
+                ),
+
+                ///相簿
+                ElevatedButton(
+                    child: const Text('相簿'),
+                    onPressed: () async {
+                      final images = await dirList();
+                      setState(() {
                         Navigator.push(
                             context,
                             MaterialPageRoute(
-                                builder: (context) => const DialogExample()));
-                      }),
-                ),
+                                builder: (context) =>
+                                    MyGallery(images: images)));
+                      });
+                    }),
               ],
+            ),
+
+            ///dialog
+            Container(
+              height: 50,
+              padding: const EdgeInsets.fromLTRB(10, 10, 10, 0),
+              child: ElevatedButton(
+                  child: const Text('dialog'),
+                  onPressed: () {
+                    Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (context) => const DialogExample()));
+                  }),
             ),
 
             ///動畫 button
@@ -260,7 +257,6 @@ class _HomeState extends State<Home> {
                   }),
             ),
 
-
             ///DateTimePicker
             Container(
               height: 50,
@@ -275,8 +271,6 @@ class _HomeState extends State<Home> {
                 },
               ),
             ),
-
-
 
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -337,7 +331,28 @@ class _HomeState extends State<Home> {
 
             Container(
               child: image == null ? null : Image.file(image!),
-            )
+            ),
+
+            ElevatedButton(
+                child: const Text('create dir'),
+                onPressed: () async {
+                  await createDir();
+                }),
+
+            ElevatedButton(
+                child: const Text('dir list'),
+                onPressed: () async {
+                  await dirList();
+                }),
+
+            ElevatedButton(
+                child: const Text('delete all image'),
+                onPressed: () async {
+                  final images = await dirList();
+                  for (File file in images) {
+                    if (file.path.endsWith('jpg')) file.delete();
+                  }
+                }),
           ],
         ));
   }
