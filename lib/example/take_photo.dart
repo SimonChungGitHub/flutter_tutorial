@@ -37,8 +37,8 @@ class _TakePhotoExampleState extends State<TakePhotoExample> {
   void initState() {
     super.initState();
     //固定該頁面螢幕垂直不旋轉
-    // SystemChrome.setPreferredOrientations(
-    //     [DeviceOrientation.portraitUp, DeviceOrientation.portraitDown]);
+    SystemChrome.setPreferredOrientations(
+        [DeviceOrientation.portraitUp, DeviceOrientation.portraitDown]);
 
     image = widget.image;
     // SystemChrome.setPreferredOrientations([
@@ -244,14 +244,16 @@ class _TakePhotoExampleState extends State<TakePhotoExample> {
       twoTouchOnly: true,
       onScaleStart: () {},
       onScaleStop: () {},
-      child: ClipRRect(
+      child: SizedBox(
+        width:MediaQuery.of(context).size.width,
+        child:ClipRRect(
           child: image == null
               ? null
               : Image.file(
-                  image!,
-                  fit: BoxFit.contain,
-                  alignment: Alignment.topCenter,
-                )),
+            image!,
+            fit: BoxFit.contain,
+            alignment: Alignment.topCenter,
+          )),)
     );
   }
 

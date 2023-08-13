@@ -186,7 +186,7 @@ class CustomCameraOneShotState extends State<CustomCameraOneShot>
                             ),
                             iconSize: 60,
                             color: Colors.white,
-                            onPressed: () => takePicture()),
+                            onPressed: () => _takePicture()),
                       ),
                     ],
                   );
@@ -207,7 +207,7 @@ class CustomCameraOneShotState extends State<CustomCameraOneShot>
                             ),
                             iconSize: 60,
                             color: Colors.white,
-                            onPressed: () => takePicture()),
+                            onPressed: () => _takePicture()),
                       ),
                     ],
                   );
@@ -220,7 +220,7 @@ class CustomCameraOneShotState extends State<CustomCameraOneShot>
     );
   }
 
-  Future<void> takePicture() async {
+  Future<void> _takePicture() async {
     try {
       await _initializeControllerFuture;
       if (!_controller.value.isInitialized) {

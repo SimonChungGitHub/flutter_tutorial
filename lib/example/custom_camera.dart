@@ -171,26 +171,38 @@ class CustomCameraState extends State<CustomCamera>
                   return Row(
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                     children: [
-                      _cameraPreviewWidget(_controller),
-                      IconButton(
-                          icon: const Icon(
-                            Icons.camera_alt,
-                          ),
-                          iconSize: 60,
-                          onPressed: () => _takePicture()),
+                      Expanded(
+                        flex: 85,
+                        child: _cameraPreviewWidget(_controller),
+                      ),
+                      Expanded(
+                        flex: 15,
+                        child: IconButton(
+                            icon: const Icon(
+                              Icons.camera_alt,
+                            ),
+                            iconSize: 60,
+                            onPressed: () => _takePicture()),
+                      ),
                     ],
                   );
                 } else {
                   return Column(
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                     children: [
-                      _cameraPreviewWidget(_controller),
-                      IconButton(
-                          icon: const Icon(
-                            Icons.camera_alt,
-                          ),
-                          iconSize: 60,
-                          onPressed: () => _takePicture()),
+                      Expanded(
+                        flex: 85,
+                        child: _cameraPreviewWidget(_controller),
+                      ),
+                      Expanded(
+                        flex: 15,
+                        child: IconButton(
+                            icon: const Icon(
+                              Icons.camera_alt,
+                            ),
+                            iconSize: 60,
+                            onPressed: () => _takePicture()),
+                      ),
                     ],
                   );
                 }
