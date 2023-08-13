@@ -82,7 +82,7 @@ class _TakePhotoExampleState extends State<TakePhotoExample> {
         ),
         backgroundColor: Colors.blue,
       ),
-      body: body(),
+      body: SizedBox.expand(child:body(),),
     );
   }
 

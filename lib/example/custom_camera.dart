@@ -78,9 +78,7 @@ class CustomCameraState extends State<CustomCamera>
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: _openCamera(),
-    );
+    return _openCamera();
   }
 
   ///相機預覽
@@ -162,55 +160,57 @@ class CustomCameraState extends State<CustomCamera>
   ///開啟自製相機 (相機預覽 + 拍照按鈕)
   Widget _openCamera() {
     return Scaffold(
-      body: FutureBuilder<void>(
-          future: _initializeControllerFuture,
-          builder: (context, snapshot) {
-            if (snapshot.connectionState == ConnectionState.done) {
-              return OrientationBuilder(builder: (context, orientation) {
-                if (orientation == Orientation.landscape) {
-                  return Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    children: [
-                      Expanded(
-                        flex: 85,
-                        child: _cameraPreviewWidget(_controller),
-                      ),
-                      Expanded(
-                        flex: 15,
-                        child: IconButton(
-                            icon: const Icon(
-                              Icons.camera_alt,
-                            ),
-                            iconSize: 60,
-                            onPressed: () => _takePicture()),
-                      ),
-                    ],
-                  );
-                } else {
-                  return Column(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    children: [
-                      Expanded(
-                        flex: 85,
-                        child: _cameraPreviewWidget(_controller),
-                      ),
-                      Expanded(
-                        flex: 15,
-                        child: IconButton(
-                            icon: const Icon(
-                              Icons.camera_alt,
-                            ),
-                            iconSize: 60,
-                            onPressed: () => _takePicture()),
-                      ),
-                    ],
-                  );
-                }
-              });
-            } else {
-              return const Center(child: CircularProgressIndicator());
-            }
-          }),
+      body: SizedBox.expand(
+        child: FutureBuilder<void>(
+            future: _initializeControllerFuture,
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.done) {
+                return OrientationBuilder(builder: (context, orientation) {
+                  if (orientation == Orientation.landscape) {
+                    return Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      children: [
+                        Expanded(
+                          flex: 85,
+                          child: _cameraPreviewWidget(_controller),
+                        ),
+                        Expanded(
+                          flex: 15,
+                          child: IconButton(
+                              icon: const Icon(
+                                Icons.camera_alt,
+                              ),
+                              iconSize: 60,
+                              onPressed: () => _takePicture()),
+                        ),
+                      ],
+                    );
+                  } else {
+                    return Column(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      children: [
+                        Expanded(
+                          flex: 85,
+                          child: _cameraPreviewWidget(_controller),
+                        ),
+                        Expanded(
+                          flex: 15,
+                          child: IconButton(
+                              icon: const Icon(
+                                Icons.camera_alt,
+                              ),
+                              iconSize: 60,
+                              onPressed: () => _takePicture()),
+                        ),
+                      ],
+                    );
+                  }
+                });
+              } else {
+                return const Center(child: CircularProgressIndicator());
+              }
+            }),
+      ),
     );
   }
 

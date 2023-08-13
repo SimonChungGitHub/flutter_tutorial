@@ -79,9 +79,7 @@ class CustomCameraOneShotState extends State<CustomCameraOneShot>
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: _openCamera(),
-    );
+    return _openCamera();
   }
 
   ///相機預覽
@@ -164,59 +162,61 @@ class CustomCameraOneShotState extends State<CustomCameraOneShot>
   Widget _openCamera() {
     return Scaffold(
       backgroundColor: Colors.black87,
-      body: FutureBuilder<void>(
-          future: _initializeControllerFuture,
-          builder: (context, snapshot) {
-            if (snapshot.connectionState == ConnectionState.done) {
-              return OrientationBuilder(builder: (context, orientation) {
-                if (orientation == Orientation.landscape) {
-                  return Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    mainAxisSize: MainAxisSize.max,
-                    children: [
-                      Expanded(
-                        flex: 85,
-                        child: _cameraPreviewWidget(_controller),
-                      ),
-                      Expanded(
-                        flex: 15,
-                        child: IconButton(
-                            icon: const Icon(
-                              Icons.camera_alt,
-                            ),
-                            iconSize: 60,
-                            color: Colors.white,
-                            onPressed: () => _takePicture()),
-                      ),
-                    ],
-                  );
-                } else {
-                  return Column(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    mainAxisSize: MainAxisSize.max,
-                    children: [
-                      Expanded(
-                        flex: 85,
-                        child: _cameraPreviewWidget(_controller),
-                      ),
-                      Expanded(
-                        flex: 15,
-                        child: IconButton(
-                            icon: const Icon(
-                              Icons.camera_alt,
-                            ),
-                            iconSize: 60,
-                            color: Colors.white,
-                            onPressed: () => _takePicture()),
-                      ),
-                    ],
-                  );
-                }
-              });
-            } else {
-              return const Center(child: CircularProgressIndicator());
-            }
-          }),
+      body: SizedBox.expand(
+        child: FutureBuilder<void>(
+            future: _initializeControllerFuture,
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.done) {
+                return OrientationBuilder(builder: (context, orientation) {
+                  if (orientation == Orientation.landscape) {
+                    return Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      mainAxisSize: MainAxisSize.max,
+                      children: [
+                        Expanded(
+                          flex: 85,
+                          child: _cameraPreviewWidget(_controller),
+                        ),
+                        Expanded(
+                          flex: 15,
+                          child: IconButton(
+                              icon: const Icon(
+                                Icons.camera_alt,
+                              ),
+                              iconSize: 60,
+                              color: Colors.white,
+                              onPressed: () => _takePicture()),
+                        ),
+                      ],
+                    );
+                  } else {
+                    return Column(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      mainAxisSize: MainAxisSize.max,
+                      children: [
+                        Expanded(
+                          flex: 85,
+                          child: _cameraPreviewWidget(_controller),
+                        ),
+                        Expanded(
+                          flex: 15,
+                          child: IconButton(
+                              icon: const Icon(
+                                Icons.camera_alt,
+                              ),
+                              iconSize: 60,
+                              color: Colors.white,
+                              onPressed: () => _takePicture()),
+                        ),
+                      ],
+                    );
+                  }
+                });
+              } else {
+                return const Center(child: CircularProgressIndicator());
+              }
+            }),
+      ),
     );
   }
 
