@@ -8,7 +8,9 @@ import 'package:intl/intl.dart';
 import 'package:path_provider/path_provider.dart';
 
 class CustomCamera extends StatefulWidget {
-  const CustomCamera({super.key});
+  final bool oneShot;
+
+  const CustomCamera({super.key, this.oneShot = false});
 
   @override
   State<CustomCamera> createState() => CustomCameraState();
@@ -71,6 +73,9 @@ class CustomCameraState extends State<CustomCamera>
   Future<void> didChangeAppLifecycleState(AppLifecycleState state) async {
     if (state == AppLifecycleState.inactive) {
       debugPrint('\u001b[31m app inactive \u001b[0m');
+      if (mounted) {
+        if (widget.oneShot) Navigator.of(context).pop();
+      }
     } else {
       debugPrint('\u001b[31m app active \u001b[0m');
     }
@@ -235,10 +240,16 @@ class CustomCameraState extends State<CustomCamera>
       await xFile.saveTo(newPath);
       await File(xFile.path).delete();
       debugPrint('\u001b[31m $newPath \u001b[0m');
-
-      ///相片存入相簿後刪除檔案
-      await GallerySaver.saveImage(newPath);
-      setState(() {});
+      if (widget.oneShot) {
+        setState(() {
+          File image = File(newPath);
+          Navigator.of(context).pop(image);
+        });
+      } else {
+        ///相片存入相簿後刪除檔案
+        await GallerySaver.saveImage(newPath);
+        setState(() {});
+      }
     } on Exception catch (_) {
       debugPrint('\u001b[31m ${_.toString()} \u001b[0m');
     }
