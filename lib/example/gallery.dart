@@ -2,6 +2,9 @@ import 'dart:io';
 
 import 'package:easy_image_viewer/easy_image_viewer.dart';
 import 'package:flutter/material.dart';
+import 'package:galleryimage/galleryimage.dart';
+
+import '../gallery_view/gallery_view.dart';
 
 class MyGallery extends StatefulWidget {
   const MyGallery({super.key, required this.images});
@@ -13,11 +16,16 @@ class MyGallery extends StatefulWidget {
 }
 
 class MyGalleryState extends State<MyGallery> with WidgetsBindingObserver {
+  List<String> imagesStr = [];
+
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     WidgetsFlutterBinding.ensureInitialized();
+    for (File f in widget.images) {
+      imagesStr.add(f.path);
+    }
   }
 
   @override
@@ -46,7 +54,7 @@ class MyGalleryState extends State<MyGallery> with WidgetsBindingObserver {
         ),
         backgroundColor: Colors.blue,
       ),
-      body: gridView(widget.images),
+      body: GalleryView(imageList: imagesStr),
     );
   }
 
@@ -64,6 +72,15 @@ class MyGalleryState extends State<MyGallery> with WidgetsBindingObserver {
     );
   }
 
+  ///source img = network
+  Widget showImages(images) {
+    return GalleryImage(
+      imageUrls: images,
+      numOfShowImages: 4,
+      titleGallery: '我的相簿',
+    );
+  }
+
   Widget gridView(images) {
     return GridView.builder(
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
@@ -73,17 +90,29 @@ class MyGalleryState extends State<MyGallery> with WidgetsBindingObserver {
       ),
       itemCount: images.length,
       itemBuilder: (context, index) {
-        return Padding(padding: const EdgeInsets.all(5), child: ClipRRect(
-          ///是 ClipRRect，不是 ClipRect
-          borderRadius: BorderRadius.circular(12),
-          child: images[index] == null
-              ? null
-              : Image.file(
-            images[index]!,
-            fit: BoxFit.fill,
-            alignment: Alignment.topCenter,
+        return InkWell(
+          highlightColor: Colors.orange,
+          onTap: () {
+            debugPrint('==================');
+          },
+          onLongPress: () {
+            //todo navigator to edit page
+          },
+          child: Padding(
+            padding: const EdgeInsets.all(5),
+            child: ClipRRect(
+              ///是 ClipRRect，不是 ClipRect
+              borderRadius: BorderRadius.circular(10),
+              child: images[index] == null
+                  ? null
+                  : Image.file(
+                      images[index]!,
+                      fit: BoxFit.fill,
+                      alignment: Alignment.topCenter,
+                    ),
+            ),
           ),
-        ),);
+        );
       },
     );
   }
