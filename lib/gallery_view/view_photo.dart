@@ -1,15 +1,19 @@
 import 'dart:io';
 
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:photo_view/photo_view.dart';
 import 'package:photo_view/photo_view_gallery.dart';
 
 class ViewPhotos extends StatefulWidget {
   final String heroTitle;
-  final imageIndex;
+  final int imageIndex;
   final List<dynamic> imageList;
-  const ViewPhotos({super.key, this.imageIndex, required this.imageList, this.heroTitle = "img"});
+
+  const ViewPhotos(
+      {super.key,
+      this.imageIndex = 0,
+      required this.imageList,
+      this.heroTitle = "img"});
 
   @override
   ViewPhotosState createState() => ViewPhotosState();
@@ -18,9 +22,9 @@ class ViewPhotos extends StatefulWidget {
 class ViewPhotosState extends State<ViewPhotos> {
   late PageController pageController;
   late int currentIndex;
+
   @override
   void initState() {
-    // TODO: implement initState
     super.initState();
     currentIndex = widget.imageIndex;
     pageController = PageController(initialPage: widget.imageIndex);
@@ -56,34 +60,35 @@ class ViewPhotosState extends State<ViewPhotos> {
         leading: Container(),
         backgroundColor: Colors.black,
       ),
-      body: Container(
-          child: Stack(
-            children: [
-              PhotoViewGallery.builder(
-                scrollPhysics: const BouncingScrollPhysics(),
-                pageController: pageController,
-                builder: (BuildContext context, int index) {
-                  return PhotoViewGalleryPageOptions(
-                    imageProvider: Image.file(File(widget.imageList[index])).image,
-                    heroAttributes:
-                    PhotoViewHeroAttributes(tag: "photo${widget.imageIndex}"),
-                  );
-                },
-                onPageChanged: onPageChanged,
-                itemCount: widget.imageList.length,
-                loadingBuilder: (context, progress) => Center(
-                  child: SizedBox(
-                    width: 60.0,
-                    height: 60.0,
-                    child: (progress == null || progress.expectedTotalBytes == null)?const CircularProgressIndicator():CircularProgressIndicator(
-                      value: progress.cumulativeBytesLoaded /
-                          progress.expectedTotalBytes!,
-                    ),
+      body: Stack(
+        children: [
+      PhotoViewGallery.builder(
+        scrollPhysics: const BouncingScrollPhysics(),
+        pageController: pageController,
+        builder: (BuildContext context, int index) {
+          return PhotoViewGalleryPageOptions(
+            imageProvider: Image.file(File(widget.imageList[index])).image,
+            heroAttributes:
+                PhotoViewHeroAttributes(tag: "photo${widget.imageIndex}"),
+          );
+        },
+        onPageChanged: onPageChanged,
+        itemCount: widget.imageList.length,
+        loadingBuilder: (context, progress) => Center(
+          child: SizedBox(
+            width: 60.0,
+            height: 60.0,
+            child: (progress == null || progress.expectedTotalBytes == null)
+                ? const CircularProgressIndicator()
+                : CircularProgressIndicator(
+                    value: progress.cumulativeBytesLoaded /
+                        progress.expectedTotalBytes!,
                   ),
-                ),
-              ),
-            ],
-          )),
+          ),
+        ),
+      ),
+        ],
+      ),
     );
   }
 }
