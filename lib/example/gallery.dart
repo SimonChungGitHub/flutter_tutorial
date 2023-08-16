@@ -68,16 +68,22 @@ class MyGalleryState extends State<MyGallery> with WidgetsBindingObserver {
     return GridView.builder(
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: 3, //每行三列
-        childAspectRatio: 1.0, //显示区域宽高相等
+        mainAxisSpacing: 0,
+        childAspectRatio: 1, //显示区域宽高相等
       ),
       itemCount: images.length,
       itemBuilder: (context, index) {
-        return ListTile(
-          title: easyImageViewer(images[index]),
-          onTap: () {
-            debugPrint('\u001b[31m ${images[index].path}  \u001b[0m');
-          },
-        );
+        return Padding(padding: const EdgeInsets.all(5), child: ClipRRect(
+          ///是 ClipRRect，不是 ClipRect
+          borderRadius: BorderRadius.circular(12),
+          child: images[index] == null
+              ? null
+              : Image.file(
+            images[index]!,
+            fit: BoxFit.fill,
+            alignment: Alignment.topCenter,
+          ),
+        ),);
       },
     );
   }
@@ -98,7 +104,7 @@ class MyGalleryState extends State<MyGallery> with WidgetsBindingObserver {
             ? null
             : Image.file(
                 image!,
-                fit: BoxFit.fitWidth,
+                fit: BoxFit.fill,
                 alignment: Alignment.topCenter,
               ),
       ),
