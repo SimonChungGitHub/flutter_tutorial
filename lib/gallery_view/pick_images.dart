@@ -29,16 +29,17 @@ class PickImages extends StatefulWidget {
 }
 
 class _PickImagesState extends State<PickImages> {
-  List<PickImage> pickList = [];
+  List<PickImage> _pickList = [];
+  bool _pickAll = false;
 
   @override
   void initState() {
     super.initState();
     for (var path in widget.imageList) {
       if (path == widget.imageList[widget.index]) {
-        pickList.add(PickImage(path, true));
+        _pickList.add(PickImage(path, true));
       } else {
-        pickList.add(PickImage(path, false));
+        _pickList.add(PickImage(path, false));
       }
     }
   }
@@ -57,7 +58,21 @@ class _PickImagesState extends State<PickImages> {
             icon: const Icon(
               Icons.task_alt,
             ),
-            onPressed: () {},
+            onPressed: () {
+              setState(() {
+                if (!_pickAll) {
+                  for (var obj in _pickList) {
+                    obj.select = true;
+                  }
+                  _pickAll = true;
+                } else {
+                  for (var obj in _pickList) {
+                    obj.select = false;
+                  }
+                  _pickAll = false;
+                }
+              });
+            },
           ),
           IconButton(
             tooltip: '上傳',
@@ -66,7 +81,7 @@ class _PickImagesState extends State<PickImages> {
             ),
             onPressed: () async {
               List<PickImage> list = [];
-              for (var obj in pickList) {
+              for (var obj in _pickList) {
                 if (obj.select) {
                   var file = File(obj.path);
                   var result = await dioUpload(context, file);
@@ -80,11 +95,11 @@ class _PickImagesState extends State<PickImages> {
                 }
               }
               setState(() {
-                pickList = list;
+                _pickList = list;
               });
 
               widget.imageList.clear();
-              for (var obj in pickList) {
+              for (var obj in _pickList) {
                 widget.imageList.add(obj.path);
               }
             },
@@ -97,7 +112,7 @@ class _PickImagesState extends State<PickImages> {
             onPressed: () {
               setState(() {
                 List<PickImage> list = [];
-                for (var obj in pickList) {
+                for (var obj in _pickList) {
                   if (obj.select) {
                     debugPrint('\u001b[31m delete ${obj.path} \u001b[0m');
                     File(obj.path).deleteSync();
@@ -105,11 +120,11 @@ class _PickImagesState extends State<PickImages> {
                     list.add(obj);
                   }
                 }
-                pickList = list;
+                _pickList = list;
               });
 
               widget.imageList.clear();
-              for (var obj in pickList) {
+              for (var obj in _pickList) {
                 widget.imageList.add(obj.path);
               }
             },
@@ -120,13 +135,13 @@ class _PickImagesState extends State<PickImages> {
       body: Padding(
         padding: const EdgeInsets.all(5),
         child: GridView.builder(
-            itemCount: pickList.length,
+            itemCount: _pickList.length,
             gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                 crossAxisCount: widget.crossAxisCount,
                 crossAxisSpacing: 5.0,
                 mainAxisSpacing: 5.0),
             itemBuilder: (BuildContext context, int index) {
-              return pickList[index].select ? pick(index) : notPick(index);
+              return _pickList[index].select ? pick(index) : notPick(index);
             }),
       ),
     );
@@ -143,14 +158,15 @@ class _PickImagesState extends State<PickImages> {
           highlightColor: Colors.orange,
           onTap: () {
             setState(() {
-              pickList[index].select = !pickList[index].select;
+              _pickList[index].select = !_pickList[index].select;
+              _pickAll = false;
             });
           },
           child: ClipRRect(
             ///是 ClipRRect，不是 ClipRect
             borderRadius: BorderRadius.circular(5),
             child: Image.file(
-              File(pickList[index].path),
+              File(_pickList[index].path),
               fit: BoxFit.fill,
               alignment: Alignment.topCenter,
             ),
@@ -164,7 +180,7 @@ class _PickImagesState extends State<PickImages> {
           icon: const Icon(Icons.lens_outlined),
           onPressed: () {
             setState(() {
-              pickList[index].select = !pickList[index].select;
+              _pickList[index].select = !_pickList[index].select;
             });
           },
         ),
@@ -185,14 +201,14 @@ class _PickImagesState extends State<PickImages> {
             highlightColor: Colors.orange,
             onTap: () {
               setState(() {
-                pickList[index].select = !pickList[index].select;
+                _pickList[index].select = !_pickList[index].select;
               });
             },
             child: ClipRRect(
               ///是 ClipRRect，不是 ClipRect
               borderRadius: BorderRadius.circular(5),
               child: Image.file(
-                File(pickList[index].path),
+                File(_pickList[index].path),
                 fit: BoxFit.fill,
                 alignment: Alignment.topCenter,
               ),
@@ -207,7 +223,7 @@ class _PickImagesState extends State<PickImages> {
             icon: const Icon(Icons.task_alt_outlined),
             onPressed: () {
               setState(() {
-                pickList[index].select = !pickList[index].select;
+                _pickList[index].select = !_pickList[index].select;
               });
             },
           ),

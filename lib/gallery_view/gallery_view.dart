@@ -47,27 +47,6 @@ class _GalleryViewState extends State<GalleryView> {
         ),
         actions: [
           IconButton(
-            tooltip: '選照片',
-            icon: const Icon(
-              Icons.task_alt,
-            ),
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => PickImages(
-                    imageList: imageList,
-                    crossAxisCount: crossAxisCount,
-                  ),
-                ),
-              ).then((value) {
-                setState(() {
-                  debugPrint('\u001b[31m $value \u001b[0m');
-                });
-              });
-            },
-          ),
-          IconButton(
             tooltip: '相機',
             icon: const Icon(
               Icons.camera_alt,
