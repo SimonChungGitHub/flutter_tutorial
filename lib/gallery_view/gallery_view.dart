@@ -60,10 +60,9 @@ class _GalleryViewState extends State<GalleryView> {
                     home: const CustomCamera(),
                   ),
                 ),
-              ).then((value) {
-                setState(() {
-                  debugPrint('\u001b[31m $value \u001b[0m');
-                });
+              ).then((value) async {
+                imageList = await dirList2();
+                setState(() {});
               });
             },
           ),
@@ -141,7 +140,7 @@ class _GalleryViewState extends State<GalleryView> {
                     setState(() {
                       debugPrint('\u001b[31m $value \u001b[0m');
                     });
-                  } );
+                  });
                 },
                 child: ClipRRect(
                   ///是 ClipRRect，不是 ClipRect

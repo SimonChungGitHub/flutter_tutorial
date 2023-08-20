@@ -130,6 +130,7 @@ Future<List<String>> dirList2() async {
     debugPrint('\u001b[31m ${entity.toString()} \u001b[0m');
     if (entity.path.endsWith('jpg')) files.add(entity.path);
   }
+  files.sort();
   return files;
 }
 
