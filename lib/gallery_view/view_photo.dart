@@ -62,31 +62,31 @@ class ViewPhotosState extends State<ViewPhotos> {
       ),
       body: Stack(
         children: [
-      PhotoViewGallery.builder(
-        scrollPhysics: const BouncingScrollPhysics(),
-        pageController: pageController,
-        builder: (BuildContext context, int index) {
-          return PhotoViewGalleryPageOptions(
-            imageProvider: Image.file(File(widget.imageList[index])).image,
-            heroAttributes:
-                PhotoViewHeroAttributes(tag: "photo${widget.imageIndex}"),
-          );
-        },
-        onPageChanged: onPageChanged,
-        itemCount: widget.imageList.length,
-        loadingBuilder: (context, progress) => Center(
-          child: SizedBox(
-            width: 60.0,
-            height: 60.0,
-            child: (progress == null || progress.expectedTotalBytes == null)
-                ? const CircularProgressIndicator()
-                : CircularProgressIndicator(
-                    value: progress.cumulativeBytesLoaded /
-                        progress.expectedTotalBytes!,
-                  ),
+          PhotoViewGallery.builder(
+            scrollPhysics: const BouncingScrollPhysics(),
+            pageController: pageController,
+            builder: (BuildContext context, int index) {
+              return PhotoViewGalleryPageOptions(
+                imageProvider: Image.file(File(widget.imageList[index])).image,
+                heroAttributes:
+                    PhotoViewHeroAttributes(tag: "photo${widget.imageIndex}"),
+              );
+            },
+            onPageChanged: onPageChanged,
+            itemCount: widget.imageList.length,
+            loadingBuilder: (context, progress) => Center(
+              child: SizedBox(
+                width: 60.0,
+                height: 60.0,
+                child: (progress == null || progress.expectedTotalBytes == null)
+                    ? const CircularProgressIndicator()
+                    : CircularProgressIndicator(
+                        value: progress.cumulativeBytesLoaded /
+                            progress.expectedTotalBytes!,
+                      ),
+              ),
+            ),
           ),
-        ),
-      ),
         ],
       ),
     );

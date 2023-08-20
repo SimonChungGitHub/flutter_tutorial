@@ -94,14 +94,12 @@ class _PickImagesState extends State<PickImages> {
                   list.add(obj);
                 }
               }
-              setState(() {
-                _pickList = list;
-              });
 
               widget.imageList.clear();
-              for (var obj in _pickList) {
+              for (var obj in list) {
                 widget.imageList.add(obj.path);
               }
+              setState(() => Navigator.of(context).pop());
             },
           ),
           IconButton(
@@ -120,13 +118,12 @@ class _PickImagesState extends State<PickImages> {
                     list.add(obj);
                   }
                 }
-                _pickList = list;
+                widget.imageList.clear();
+                for (var obj in list) {
+                  widget.imageList.add(obj.path);
+                }
+                Navigator.of(context).pop();
               });
-
-              widget.imageList.clear();
-              for (var obj in _pickList) {
-                widget.imageList.add(obj.path);
-              }
             },
           ),
         ],
