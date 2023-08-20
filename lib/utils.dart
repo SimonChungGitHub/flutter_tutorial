@@ -2,9 +2,13 @@ import 'dart:io';
 
 import 'package:android_id/android_id.dart';
 import 'package:device_info_plus/device_info_plus.dart';
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:sn_progress_dialog/progress_dialog.dart';
+
+import 'config.dart';
 
 String identifierToHex(var identifier) {
   var hex = [
@@ -116,6 +120,19 @@ Future<List<File>> dirList() async {
   return files;
 }
 
+///取得指定目錄下所有檔案檔案路徑
+Future<List<String>> dirList2() async {
+  Directory directory = await getTemporaryDirectory();
+  String path = '${directory.path}${Platform.pathSeparator}';
+  Stream<FileSystemEntity> list = Directory(path).list();
+  List<String> files = [];
+  await for (FileSystemEntity entity in list) {
+    debugPrint('\u001b[31m ${entity.toString()} \u001b[0m');
+    if (entity.path.endsWith('jpg')) files.add(entity.path);
+  }
+  return files;
+}
+
 Future<void> deleteDir() async {
   Directory directory = await getTemporaryDirectory();
   String path = '${directory.path}${Platform.pathSeparator}cache';
@@ -123,4 +140,40 @@ Future<void> deleteDir() async {
   if (dir.existsSync()) {
     dir.delete();
   }
+}
+
+///上傳
+Future<bool> dioUpload(context, image) async {
+  final pd = ProgressDialog(context: context);
+  try {
+    if (image == null) return false;
+    pd.show(max: 100, msg: '檔案上傳 請稍後');
+    await Future.delayed(const Duration(seconds: 1));
+    //todo watermark
+
+    BaseOptions options = BaseOptions(
+      receiveDataWhenStatusError: true,
+      connectTimeout: const Duration(seconds: 3),
+      receiveTimeout: const Duration(seconds: 5),
+    );
+
+    var dio = Dio(options);
+    FormData formData = FormData.fromMap(
+        {"dept": "temp", "file": await MultipartFile.fromFile(image!.path)});
+    final response = await dio.post(
+      fileUploadURL,
+      data: formData,
+      onSendProgress: (int sent, int total) {
+        int progress = (((sent / total) * 100).toInt());
+        pd.update(value: progress);
+      },
+    );
+    debugPrint('\u001b[31m ${response.data.toString()} \u001b[0m');
+    return bool.parse(response.data.toString());
+  } on Exception catch (_) {
+    debugPrint('\u001b[31m ${_.toString()} \u001b[0m');
+  } finally {
+    pd.close();
+  }
+  return false;
 }
