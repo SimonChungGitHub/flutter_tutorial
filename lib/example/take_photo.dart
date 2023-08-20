@@ -15,6 +15,7 @@ import 'package:zoom_pinch_overlay/zoom_pinch_overlay.dart';
 import 'package:image/image.dart' as img;
 import '../config.dart';
 import 'animation.dart';
+import 'custom_camera.dart';
 import 'custom_camera_one_shot.dart';
 
 class TakePhotoExample extends StatefulWidget {
@@ -137,7 +138,7 @@ class _TakePhotoExampleState extends State<TakePhotoExample> {
                   Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => const CustomCameraOneShot(),
+                        builder: (context) => const CustomCamera(oneShot: true),
                       )).then((value) {
                     setState(() {
                       image = value;

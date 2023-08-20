@@ -5,7 +5,6 @@ import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_tutorial/device_info.dart';
 import 'package:flutter_tutorial/example/custom_camera.dart';
-import 'package:flutter_tutorial/example/gallery.dart';
 import 'package:flutter_tutorial/example/take_photo.dart';
 import 'package:flutter_tutorial/login.dart';
 import 'package:flutter_tutorial/utils.dart';
@@ -22,6 +21,7 @@ import 'config.dart';
 import 'example/animation.dart';
 import 'example/date_time_picker.dart';
 import 'example/dialog.dart';
+import 'gallery_view/gallery_view.dart';
 import 'global_data.dart';
 
 void main() async {
@@ -161,11 +161,62 @@ class _HomeState extends State<Home> {
     _enableNFC();
     return Scaffold(
         appBar: AppBar(
-          centerTitle: true,
+          centerTitle: false,
           title: const Text(
             'Home',
           ),
           backgroundColor: Colors.blue,
+          actions: [
+            IconButton(
+              tooltip: '相機',
+              icon: const Icon(
+                Icons.camera_alt,
+              ),
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => MaterialApp(
+                      theme: ThemeData.dark(),
+                      home: const CustomCamera(),
+                    ),
+                  ),
+                );
+              },
+            ),
+            IconButton(
+                tooltip: '相簿',
+                icon: const Icon(
+                  Icons.photo,
+                ),
+                onPressed: () async {
+                  setState(() {
+                    Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (context) => const GalleryView()));
+                  });
+                }),
+            PopupMenuButton<Text>(itemBuilder: (context) {
+              return [
+                const PopupMenuItem(
+                  child: Text(
+                    'camera',
+                  ),
+                ),
+                const PopupMenuItem(
+                  child: Text(
+                    'setting',
+                  ),
+                ),
+                const PopupMenuItem(
+                  child: Text(
+                    'aaaa',
+                  ),
+                ),
+              ];
+            }),
+          ],
         ),
         drawer: drawerWidget(),
         body: ListView(
@@ -197,162 +248,63 @@ class _HomeState extends State<Home> {
                   },
                 ),
 
-                ///連續拍照
-                ElevatedButton(
-                  child: const Text('連續拍照'),
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => MaterialApp(
-                          theme: ThemeData.dark(),
-                          home: const CustomCamera(),
-                        ),
-                      ),
-                    );
-                  },
-                ),
-
-                ///相簿
-                ElevatedButton(
-                    child: const Text('相簿'),
-                    onPressed: () async {
-                      final images = await dirList();
-                      setState(() {
+                ///dialog
+                Container(
+                  height: 50,
+                  padding: const EdgeInsets.fromLTRB(10, 10, 10, 0),
+                  child: ElevatedButton(
+                      child: const Text('dialog'),
+                      onPressed: () {
                         Navigator.push(
                             context,
                             MaterialPageRoute(
-                                builder: (context) =>
-                                    MyGallery(images: images)));
-                      });
-                    }),
-              ],
-            ),
-
-            ///dialog
-            Container(
-              height: 50,
-              padding: const EdgeInsets.fromLTRB(10, 10, 10, 0),
-              child: ElevatedButton(
-                  child: const Text('dialog'),
-                  onPressed: () {
-                    Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                            builder: (context) => const DialogExample()));
-                  }),
-            ),
-
-            ///動畫 button
-            Container(
-              height: 50,
-              padding: const EdgeInsets.fromLTRB(10, 10, 10, 0),
-              child: ElevatedButton(
-                  child: const Text('動畫'),
-                  onPressed: () {
-                    Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                            builder: (context) => const AnimationDialog()));
-                  }),
-            ),
-
-            ///DateTimePicker
-            Container(
-              height: 50,
-              padding: const EdgeInsets.fromLTRB(10, 10, 10, 0),
-              child: ElevatedButton(
-                child: const Text('DateTimePicker'),
-                onPressed: () {
-                  Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                          builder: (context) => const DateTimePickerExample()));
-                },
-              ),
-            ),
-
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                TextButton(
-                  onPressed: () {
-                    picker.pickImage(source: ImageSource.camera).then((xFile) {
-                      setState(() {
-                        image = null;
-                      });
-
-                      File file = File(xFile!.path);
-                      _buildImage(file).then((value) {
-                        image = value;
-                        debugPrint('\u001b[31m bbbb ${value.path} \u001b[0m');
-
-                        StampImage.create(
-                          context: context,
-                          image: value,
-                          savePath: file.parent.path,
-                          saveFile: true,
-                          children: [
-                            Positioned(
-                              bottom: 10,
-                              right: 10,
-                              child: _watermarkItem(),
-                            ),
-                            Positioned(
-                              top: 10,
-                              left: 10,
-                              child: _watermarkItem(),
-                            )
-                          ],
-                          onSuccess: (file2) => setState(() {
-                            // image = file2;
-                            debugPrint(
-                                '\u001b[31m cccccc ${file2.path} \u001b[0m');
-                          }),
-                        );
-                      });
-                    });
-                  },
-                  child: const Text('img_pick'),
+                                builder: (context) => const DialogExample()));
+                      }),
                 ),
-                TextButton(
-                    onPressed: () async {
-                      if (image == null) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text("沒有照片可上傳")));
-                      } else {
-                        _dioUpload();
-                        // dioUploadThumbnail();
-                      }
-                    },
-                    child: const Text('dio_upload')),
+
+                ///動畫 button
+                Container(
+                  height: 50,
+                  padding: const EdgeInsets.fromLTRB(10, 10, 10, 0),
+                  child: ElevatedButton(
+                      child: const Text('動畫'),
+                      onPressed: () {
+                        Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                                builder: (context) => const AnimationDialog()));
+                      }),
+                ),
               ],
             ),
+            Row(mainAxisAlignment: MainAxisAlignment.spaceEvenly, children: [
+              ///DateTimePicker
+              Container(
+                height: 50,
+                padding: const EdgeInsets.fromLTRB(10, 10, 10, 0),
+                child: ElevatedButton(
+                  child: const Text('DateTimePicker'),
+                  onPressed: () {
+                    Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (context) =>
+                                const DateTimePickerExample()));
+                  },
+                ),
+              ),
+              ElevatedButton(
+                  child: const Text('create dir'),
+                  onPressed: () async {
+                    await createDir();
+                  }),
 
-            Container(
-              child: image == null ? null : Image.file(image!),
-            ),
-
-            ElevatedButton(
-                child: const Text('create dir'),
-                onPressed: () async {
-                  await createDir();
-                }),
-
-            ElevatedButton(
-                child: const Text('dir list'),
-                onPressed: () async {
-                  await dirList();
-                }),
-
-            ElevatedButton(
-                child: const Text('delete all image'),
-                onPressed: () async {
-                  final images = await dirList();
-                  for (File file in images) {
-                    if (file.path.endsWith('jpg')) file.delete();
-                  }
-                }),
+              ElevatedButton(
+                  child: const Text('dir list'),
+                  onPressed: () async {
+                    await dirList();
+                  }),
+            ]),
           ],
         ));
   }
