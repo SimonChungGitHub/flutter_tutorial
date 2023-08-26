@@ -57,6 +57,7 @@ class _PickImagesState extends State<PickImages> {
             tooltip: '選照片',
             icon: const Icon(
               Icons.task_alt,
+              size: 25,
             ),
             onPressed: () {
               setState(() {
@@ -75,9 +76,35 @@ class _PickImagesState extends State<PickImages> {
             },
           ),
           IconButton(
+            tooltip: '刪除',
+            icon: const Icon(
+              Icons.delete,
+              size: 25,
+            ),
+            onPressed: () async {
+              setState(() {
+                List<PickImage> list = [];
+                for (var obj in _pickList) {
+                  if (obj.select) {
+                    debugPrint('\u001b[31m delete ${obj.path} \u001b[0m');
+                    File(obj.path).deleteSync();
+                  } else {
+                    list.add(obj);
+                  }
+                }
+                widget.imageList.clear();
+                for (var obj in list) {
+                  widget.imageList.add(obj.path);
+                }
+                Navigator.of(context).pop();
+              });
+            },
+          ),
+          IconButton(
             tooltip: '上傳',
             icon: const Icon(
               Icons.upload,
+              size: 25,
             ),
             onPressed: () async {
               List<PickImage> list = [];
@@ -100,31 +127,6 @@ class _PickImagesState extends State<PickImages> {
                 widget.imageList.add(obj.path);
               }
               setState(() => Navigator.of(context).pop());
-            },
-          ),
-          IconButton(
-            tooltip: '刪除',
-            icon: const Icon(
-              Icons.delete,
-            ),
-            onPressed: () async {
-              bool? result = await showAlertDialogWithButton(context, Icons.delete, '選取的照片將被刪除');
-              setState(() {
-                List<PickImage> list = [];
-                for (var obj in _pickList) {
-                  if (obj.select) {
-                    debugPrint('\u001b[31m delete ${obj.path} \u001b[0m');
-                    File(obj.path).deleteSync();
-                  } else {
-                    list.add(obj);
-                  }
-                }
-                widget.imageList.clear();
-                for (var obj in list) {
-                  widget.imageList.add(obj.path);
-                }
-                Navigator.of(context).pop();
-              });
             },
           ),
         ],
