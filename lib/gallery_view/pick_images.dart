@@ -29,7 +29,7 @@ class PickImages extends StatefulWidget {
 }
 
 class _PickImagesState extends State<PickImages> {
-  List<PickImage> _pickList = [];
+  final List<PickImage> _pickList = [];
   bool _pickAll = false;
 
   @override
