@@ -82,22 +82,26 @@ class _PickImagesState extends State<PickImages> {
               size: 25,
             ),
             onPressed: () async {
-              setState(() {
-                List<PickImage> list = [];
-                for (var obj in _pickList) {
-                  if (obj.select) {
-                    debugPrint('\u001b[31m delete ${obj.path} \u001b[0m');
-                    File(obj.path).deleteSync();
-                  } else {
-                    list.add(obj);
+              bool? result = await showAlertDialogWithButton(
+                  context, Icons.delete, '選取的照片將被刪除');
+              if (result!) {
+                setState(() {
+                  List<PickImage> list = [];
+                  for (var obj in _pickList) {
+                    if (obj.select) {
+                      debugPrint('\u001b[31m delete ${obj.path} \u001b[0m');
+                      File(obj.path).deleteSync();
+                    } else {
+                      list.add(obj);
+                    }
                   }
-                }
-                widget.imageList.clear();
-                for (var obj in list) {
-                  widget.imageList.add(obj.path);
-                }
-                Navigator.of(context).pop();
-              });
+                  widget.imageList.clear();
+                  for (var obj in list) {
+                    widget.imageList.add(obj.path);
+                  }
+                  Navigator.of(context).pop();
+                });
+              }
             },
           ),
           IconButton(
