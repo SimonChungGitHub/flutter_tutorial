@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:android_id/android_id.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:dio/dio.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -121,7 +122,7 @@ Future<List<File>> dirList() async {
 }
 
 ///取得指定目錄下所有檔案檔案路徑
-Future<List<String>> dirList2() async {
+Future<List<String>> getImageListFromCacheDirectory() async {
   Directory directory = await getTemporaryDirectory();
   String path = '${directory.path}${Platform.pathSeparator}';
   Stream<FileSystemEntity> list = Directory(path).list();
@@ -145,6 +146,7 @@ Future<void> deleteDir() async {
 
 ///上傳
 Future<bool> dioUpload(context, image) async {
+  debugPrint('\u001b[31m ===== start upload =====\u001b[0m');
   final pd = ProgressDialog(context: context);
   try {
     if (image == null) return false;
@@ -169,12 +171,54 @@ Future<bool> dioUpload(context, image) async {
         pd.update(value: progress);
       },
     );
-    debugPrint('\u001b[31m ${response.data.toString()} \u001b[0m');
-    return bool.parse(response.data.toString());
+    bool result = bool.parse(response.data.toString());
+    if (result) {
+      debugPrint('\u001b[31m ===== upload success =====\u001b[0m');
+    } else {
+      debugPrint('\u001b[31m ===== upload fail =====\u001b[0m');
+    }
+    return result;
   } on Exception catch (_) {
-    debugPrint('\u001b[31m ${_.toString()} \u001b[0m');
+    debugPrint('\u001b[31m ===== upload fail: ${_.toString()} \u001b[0m');
   } finally {
     pd.close();
   }
   return false;
+}
+
+///提示視窗 (ios style dialog, not work)
+Future<bool?> showAlertDialogWithButton(context, icon, content) {
+  return showCupertinoDialog<bool>(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          elevation: 2,
+          shape: const RoundedRectangleBorder(
+              borderRadius: BorderRadius.all(Radius.circular(20.0))),
+          actionsAlignment: MainAxisAlignment.spaceEvenly,
+          backgroundColor: Colors.black87,
+          icon: Icon(icon, size: 30),
+          content: Text(content),
+          actions: <Widget>[
+            TextButton(
+                onPressed: () {
+                  Navigator.of(context).pop(true); //返回值=true
+                },
+                child: const Text("確定",
+                    style: TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w500,
+                        fontSize: 16))),
+            TextButton(
+                onPressed: () {
+                  Navigator.of(context).pop(false);
+                },
+                child: const Text("取消",
+                    style: TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w500,
+                        fontSize: 16)))
+          ],
+        );
+      });
 }

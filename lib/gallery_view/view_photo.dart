@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:photo_view/photo_view.dart';
 import 'package:photo_view/photo_view_gallery.dart';
 
+import '../utils.dart';
+
 class ViewPhotos extends StatefulWidget {
   final String heroTitle;
   final int imageIndex;
@@ -46,6 +48,24 @@ class ViewPhotosState extends State<ViewPhotos> {
           style: const TextStyle(color: Colors.white),
         ),
         actions: [
+          CircleAvatar(
+            backgroundColor: Colors.black54,
+            child: IconButton(
+              onPressed: () async => deleteImage(),
+              icon: const Icon(Icons.delete),
+              color: Colors.white,
+              iconSize: 25,
+            ),
+          ),
+          CircleAvatar(
+            backgroundColor: Colors.black54,
+            child: IconButton(
+              onPressed: () async => uploadImage(),
+              icon: const Icon(Icons.upload),
+              color: Colors.white,
+              iconSize: 25,
+            ),
+          ),
           IconButton(
             icon: const Icon(
               Icons.clear,
@@ -61,11 +81,13 @@ class ViewPhotosState extends State<ViewPhotos> {
         backgroundColor: Colors.black,
       ),
       body: Stack(
+        alignment: AlignmentDirectional.center,
         children: [
           PhotoViewGallery.builder(
             scrollPhysics: const BouncingScrollPhysics(),
             pageController: pageController,
             builder: (BuildContext context, int index) {
+              //buttonShow = !buttonShow;
               return PhotoViewGalleryPageOptions(
                 imageProvider: Image.file(File(widget.imageList[index])).image,
                 initialScale: PhotoViewComputedScale.contained * 0.9,
@@ -77,20 +99,51 @@ class ViewPhotosState extends State<ViewPhotos> {
             onPageChanged: onPageChanged,
             itemCount: widget.imageList.length,
             loadingBuilder: (context, progress) => Center(
-              child: SizedBox(
-                width: 60.0,
-                height: 60.0,
-                child: (progress == null || progress.expectedTotalBytes == null)
-                    ? const CircularProgressIndicator()
-                    : CircularProgressIndicator(
-                        value: progress.cumulativeBytesLoaded /
-                            progress.expectedTotalBytes!,
-                      ),
-              ),
+              child: (progress == null || progress.expectedTotalBytes == null)
+                  ? const CircularProgressIndicator()
+                  : CircularProgressIndicator(
+                      value: progress.cumulativeBytesLoaded /
+                          progress.expectedTotalBytes!,
+                    ),
             ),
           ),
         ],
       ),
     );
+  }
+
+  Future<void> deleteImage() async {
+    bool? result = await showAlertDialogWithButton(context, Icons.delete, '此張照片將被刪除');
+    if (result!) {
+      File image = File(widget.imageList[currentIndex]);
+      image.deleteSync();
+      widget.imageList.removeAt(currentIndex);
+      if (widget.imageList.length <= currentIndex) {
+        currentIndex--;
+      }
+      setState(() {
+        if (currentIndex < 0) {
+          Navigator.of(context).pop(widget.imageList);
+        }
+      });
+    }
+  }
+
+  Future<void> uploadImage() async {
+    debugPrint('\u001b[31m ===== upload... =====\u001b[0m');
+    File file = File(widget.imageList[currentIndex]);
+    var result = await dioUpload(context, file);
+    if (result) {
+      file.deleteSync();
+      widget.imageList.removeAt(currentIndex);
+      if (widget.imageList.length <= currentIndex) {
+        currentIndex--;
+      }
+      setState(() {
+        if (currentIndex < 0) {
+          Navigator.of(context).pop(widget.imageList);
+        }
+      });
+    }
   }
 }

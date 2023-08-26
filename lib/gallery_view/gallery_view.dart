@@ -32,10 +32,9 @@ class _GalleryViewState extends State<GalleryView> {
   @override
   void initState() {
     super.initState();
-    dirList2().then((value) {
-      setState(() {
-        imageList = value;
-      });
+    getImageListFromCacheDirectory().then((value) {
+      imageList = value;
+      setState(() {});
     });
   }
 
@@ -63,7 +62,7 @@ class _GalleryViewState extends State<GalleryView> {
                   ),
                 ),
               ).then((value) async {
-                imageList = await dirList2();
+                imageList = await getImageListFromCacheDirectory();
                 setState(() {});
               });
             },
@@ -116,7 +115,6 @@ class _GalleryViewState extends State<GalleryView> {
             itemBuilder: (BuildContext context, int index) {
               return InkWell(
                 onTap: () {
-
                   ///顯示一張照片
                   // Navigator.push(
                   //     context,
@@ -162,16 +160,20 @@ class _GalleryViewState extends State<GalleryView> {
 
                   ///顯示自訂相簿
                   Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                          builder: (_) {
-                            return ViewPhotos(
-                              imageIndex: index,
-                              imageList: imageList,
-                              heroTitle: "image$index",
-                            );
-                          },
-                          fullscreenDialog: true));
+                          context,
+                          MaterialPageRoute(
+                              builder: (_) {
+                                return ViewPhotos(
+                                  imageIndex: index,
+                                  imageList: imageList,
+                                  heroTitle: "image$index",
+                                );
+                              },
+                              fullscreenDialog: true))
+                      .then((value) async {
+                    imageList = await getImageListFromCacheDirectory();
+                    setState(() {});
+                  });
                 },
                 onLongPress: () {
                   Navigator.push(
