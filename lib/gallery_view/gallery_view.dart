@@ -5,6 +5,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_tutorial/gallery_view/pick_images.dart';
 import 'package:flutter_tutorial/gallery_view/view_photo.dart';
+import 'package:photo_view/photo_view.dart';
+import 'package:photo_view/photo_view_gallery.dart';
 
 import '../example/custom_camera.dart';
 import '../utils.dart';
@@ -114,6 +116,51 @@ class _GalleryViewState extends State<GalleryView> {
             itemBuilder: (BuildContext context, int index) {
               return InkWell(
                 onTap: () {
+
+                  ///顯示一張照片
+                  // Navigator.push(
+                  //     context,
+                  //     MaterialPageRoute(
+                  //         builder: (_) {
+                  //           return PhotoView(
+                  //             imageProvider: Image.file(File(imageList[index])).image,
+                  //           );
+                  //         },
+                  //         fullscreenDialog: true));
+
+                  ///顯示相簿
+                  // Navigator.push(
+                  //     context,
+                  //     MaterialPageRoute(
+                  //         builder: (_) {
+                  //           return PhotoViewGallery.builder(
+                  //             scrollPhysics: const BouncingScrollPhysics(),
+                  //             builder: (BuildContext context, int index) {
+                  //               return PhotoViewGalleryPageOptions(
+                  //                 imageProvider: Image.file(File(imageList[index])).image,
+                  //                 initialScale: PhotoViewComputedScale.contained * 0.9,
+                  //                 minScale: 0.5,
+                  //                 // heroAttributes: PhotoViewHeroAttributes(tag: galleryItems[index].id),
+                  //               );
+                  //             },
+                  //             itemCount: imageList.length,
+                  //             loadingBuilder: (context, event) => const Center(
+                  //               child: SizedBox(
+                  //                 width: 20.0,
+                  //                 height: 20.0,
+                  //                 child: CircularProgressIndicator(
+                  //                 ),
+                  //               ),
+                  //             ),
+                  //             // backgroundDecoration: widget.backgroundDecoration,
+                  //             // pageController: widget.pageController,
+                  //             // onPageChanged: onPageChanged,
+                  //           );
+                  //         },
+                  //         fullscreenDialog: true),
+                  // );
+
+                  ///顯示自訂相簿
                   Navigator.push(
                       context,
                       MaterialPageRoute(

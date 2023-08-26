@@ -68,6 +68,8 @@ class ViewPhotosState extends State<ViewPhotos> {
             builder: (BuildContext context, int index) {
               return PhotoViewGalleryPageOptions(
                 imageProvider: Image.file(File(widget.imageList[index])).image,
+                initialScale: PhotoViewComputedScale.contained * 0.9,
+                minScale: 0.5,
                 heroAttributes:
                     PhotoViewHeroAttributes(tag: "photo${widget.imageIndex}"),
               );
