@@ -1,10 +1,10 @@
 import 'dart:io';
 
-import 'package:audioplayers/audioplayers.dart';
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:gallery_saver/gallery_saver.dart';
 import 'package:intl/intl.dart';
+import 'package:native_shutter_sound/native_shutter_sound.dart';
 import 'package:path_provider/path_provider.dart';
 
 class CustomCamera extends StatefulWidget {
@@ -229,8 +229,7 @@ class CustomCameraState extends State<CustomCamera>
       if (_controller.value.isTakingPicture) return;
 
       ///相機快門音效
-      final player = AudioPlayer();
-      await player.play(AssetSource('snapshot.mp3'));
+      NativeShutterSound.play();
       await _controller.setFocusMode(FocusMode.locked);
       final xFile = await _controller.takePicture();
 

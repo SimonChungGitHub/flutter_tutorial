@@ -1,6 +1,5 @@
 import 'dart:io';
 
-import 'package:camera/camera.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_tutorial/device_info.dart';
@@ -13,7 +12,6 @@ import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 import 'package:nfc_manager/nfc_manager.dart';
 import 'package:sn_progress_dialog/progress_dialog.dart';
-import 'package:stamp_image/stamp_image.dart';
 import 'package:yaml/yaml.dart';
 
 import 'CustomDropdownButton2.dart';

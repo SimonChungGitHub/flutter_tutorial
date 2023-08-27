@@ -201,23 +201,29 @@ Future<bool?> showAlertDialogWithButton(context, icon, content) {
           content: Text(content),
           actions: <Widget>[
             TextButton(
-                onPressed: () {
-                  Navigator.of(context).pop(true); //返回值=true
-                },
-                child: const Text("確定",
-                    style: TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.w500,
-                        fontSize: 16))),
+              onPressed: () {
+                Navigator.of(context).pop(false);
+              },
+              child: const Text(
+                "取消",
+                style: TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w500,
+                    fontSize: 16),
+              ),
+            ),
             TextButton(
-                onPressed: () {
-                  Navigator.of(context).pop(false);
-                },
-                child: const Text("取消",
-                    style: TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.w500,
-                        fontSize: 16)))
+              onPressed: () {
+                Navigator.of(context).pop(true); //返回值=true
+              },
+              child: const Text(
+                "確定",
+                style: TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w500,
+                    fontSize: 16),
+              ),
+            ),
           ],
         );
       });
