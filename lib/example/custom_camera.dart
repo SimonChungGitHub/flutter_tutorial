@@ -39,12 +39,8 @@ class CustomCameraState extends State<CustomCamera>
         _initializeControllerFuture = _controller.initialize();
         await _initializeControllerFuture;
         setState(() {});
-        _controller
-            .getMaxZoomLevel()
-            .then((double value) => _maxAvailableZoom = value);
-        _controller
-            .getMinZoomLevel()
-            .then((double value) => _minAvailableZoom = value);
+        _maxAvailableZoom = await _controller.getMaxZoomLevel();
+        _minAvailableZoom = await _controller.getMinZoomLevel();
 
         ///If the controller is updated then update the UI.
         _controller.addListener(() {
