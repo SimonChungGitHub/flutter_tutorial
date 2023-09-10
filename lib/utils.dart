@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:android_id/android_id.dart';
@@ -135,6 +136,19 @@ Future<List<String>> getImageListFromCacheDirectory() async {
   return files;
 }
 
+Future<List<String>> getVideoListFromCacheDirectory() async {
+  Directory directory = await getTemporaryDirectory();
+  String path = '${directory.path}${Platform.pathSeparator}';
+  Stream<FileSystemEntity> list = Directory(path).list();
+  List<String> files = [];
+  await for (FileSystemEntity entity in list) {
+    debugPrint('\u001b[31m ${entity.toString()} \u001b[0m');
+    if (entity.path.endsWith('mp4')) files.add(entity.path);
+  }
+  files.sort();
+  return files;
+}
+
 Future<void> deleteDir() async {
   Directory directory = await getTemporaryDirectory();
   String path = '${directory.path}${Platform.pathSeparator}cache';
@@ -158,6 +172,7 @@ Future<bool> dioUpload(context, image) async {
       receiveDataWhenStatusError: true,
       connectTimeout: const Duration(seconds: 3),
       receiveTimeout: const Duration(seconds: 5),
+      responseType: ResponseType.plain, //<- 設定這行才會回傳json string
     );
 
     var dio = Dio(options);
@@ -171,13 +186,20 @@ Future<bool> dioUpload(context, image) async {
         pd.update(value: progress);
       },
     );
-    bool result = bool.parse(response.data.toString());
-    if (result) {
+
+    String result = response.data.toString();
+    final map = jsonDecode(response.data.toString());
+    bool isSuccess = bool.parse(map['result']);
+
+    debugPrint('\u001b[31m ===== $result =====\u001b[0m');
+    debugPrint('\u001b[31m ===== $map =====\u001b[0m');
+
+    if (isSuccess) {
       debugPrint('\u001b[31m ===== upload success =====\u001b[0m');
     } else {
       debugPrint('\u001b[31m ===== upload fail =====\u001b[0m');
     }
-    return result;
+    return isSuccess;
   } on Exception catch (_) {
     debugPrint('\u001b[31m ===== upload fail: ${_.toString()} \u001b[0m');
   } finally {
