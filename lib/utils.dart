@@ -189,10 +189,10 @@ Future<bool> dioUpload(context, image) async {
 
     String result = response.data.toString();
     final map = jsonDecode(response.data.toString());
-    bool isSuccess = bool.parse(map['result']);
+    bool isSuccess = map['result'];
 
-    debugPrint('\u001b[31m ===== $result =====\u001b[0m');
-    debugPrint('\u001b[31m ===== $map =====\u001b[0m');
+    debugPrint('\u001b[31m ===== reply json: $result =====\u001b[0m');
+    debugPrint('\u001b[31m ===== convert map: $map =====\u001b[0m');
 
     if (isSuccess) {
       debugPrint('\u001b[31m ===== upload success =====\u001b[0m');
