@@ -13,7 +13,6 @@ import 'package:image/image.dart' as img;
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 import 'package:nfc_manager/nfc_manager.dart';
-import 'package:path_provider/path_provider.dart';
 import 'package:sn_progress_dialog/progress_dialog.dart';
 import 'package:yaml/yaml.dart';
 
@@ -97,35 +96,7 @@ class _HomeState extends State<Home> {
     }
   }
 
-  // void dioUpload() async {
-  //   try {
-  //     if (image == null) return;
-  //     var dio = Dio();
-  //     ProgressDialog pd = ProgressDialog(context: context);
-  //     pd.show(max: 100, msg: 'File Uploading...');
-  //     FormData formData = FormData.fromMap(
-  //         {"dept": "temp", "file": await MultipartFile.fromFile(image!.path)});
-  //     final response = await dio.post(
-  //       fileUploadURL,
-  //       data: formData,
-  //       onSendProgress: (int sent, int total) {
-  //         int progress = (((sent / total) * 100).toInt());
-  //         pd.update(value: progress);
-  //       },
-  //     );
-  //     bool result = bool.parse(response.data.toString());
-  //     if (result && image != null) {
-  //       File(image!.path).deleteSync();
-  //       image = null;
-  //       setState(() {});
-  //     }
-  //     debugPrint('--------${response.data.toString()}');
-  //   } catch (e) {
-  //     debugPrint(e.toString());
-  //   } finally {
-  //     Navigator.of(context);
-  //   }
-  // }
+
 
   void dioUploadThumbnail() async {
     try {

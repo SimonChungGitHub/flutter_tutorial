@@ -4,11 +4,8 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_tutorial/gallery_view/pick_images.dart';
-import 'package:flutter_tutorial/gallery_view/view_image.dart';
-import 'package:photo_view/photo_view.dart';
-import 'package:photo_view/photo_view_gallery.dart';
+import 'package:flutter_tutorial/gallery_view/view_video.dart';
 
-import '../example/custom_camera.dart';
 import '../example/custom_video_player.dart';
 import '../utils.dart';
 
@@ -121,10 +118,9 @@ class _VideoViewState extends State<VideoView> {
                       context,
                       MaterialPageRoute(
                           builder: (_) {
-                            return ViewPhotos(
-                              imageIndex: index,
-                              imageList: videoList,
-                              heroTitle: "image$index",
+                            return ViewVideo(
+                              videoIndex: index,
+                              videoList: videoList,
                             );
                           },
                           fullscreenDialog: true))

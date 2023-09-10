@@ -1,9 +1,4 @@
-// Copyright 2013 The Flutter Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style license that can be
-// found in the LICENSE file.
-
 import 'dart:async';
-import 'dart:io';
 
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
@@ -230,7 +225,6 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
   /// 顯示錄影用控制按鈕
   Widget _captureControlRowWidget() {
     final CameraController? cameraController = controller;
-
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
       children: <Widget>[
@@ -344,6 +338,7 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
     if (mounted) setState(() {});
   }
 
+  ///no use
   Future<void> onCaptureOrientationLockButtonPressed() async {
     try {
       if (controller != null) {
@@ -366,7 +361,7 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
   void onVideoRecordButtonPressed() {
     startVideoRecording().then((_) {
       if (mounted) setState(() {});
-      showInSnackBar('開始錄影');
+      // showInSnackBar('開始錄影');
     });
   }
 
@@ -375,7 +370,7 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
     stopVideoRecording().then((XFile? file) {
       if (mounted) setState(() {});
       if (file != null) {
-        showInSnackBar('錄影結束\n${file.path}');
+        // showInSnackBar('錄影結束\n${file.path}');
         videoFile = file;
       }
     });
@@ -385,7 +380,7 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
   void onPauseButtonPressed() {
     pauseVideoRecording().then((_) {
       if (mounted) setState(() {});
-      showInSnackBar('暫停錄影');
+      // showInSnackBar('暫停錄影');
     });
   }
 
@@ -393,7 +388,7 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
   void onResumeButtonPressed() {
     resumeVideoRecording().then((_) {
       if (mounted) setState(() {});
-      showInSnackBar('繼續錄影');
+      // showInSnackBar('繼續錄影');
     });
   }
 
@@ -449,33 +444,6 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
       _showCameraException(e);
       rethrow;
     }
-  }
-
-  ///影片播放
-  Future<void> _startVideoPlayer(XFile videoFile) async {
-    final VideoPlayerController vController =
-        VideoPlayerController.file(File(videoFile.path));
-    VoidCallback? videoPlayerListener;
-    videoPlayerListener = () {
-      if (videoController != null) {
-        // Refreshing the state to update video player with the correct ratio.
-        if (mounted) {
-          setState(() {});
-        }
-        videoController!.removeListener(videoPlayerListener!);
-      }
-    };
-    vController.addListener(videoPlayerListener);
-    await vController.setLooping(true);
-    await vController.initialize();
-    await videoController?.dispose();
-    if (mounted) {
-      setState(() {
-        // imageFile = null;
-        videoController = vController;
-      });
-    }
-    await vController.play();
   }
 
   void _showCameraException(CameraException e) {
