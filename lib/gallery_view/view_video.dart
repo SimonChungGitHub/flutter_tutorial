@@ -30,12 +30,15 @@ class ViewVideoState extends State<ViewVideo> {
     super.initState();
     currentIndex = widget.videoIndex;
     videoList = widget.videoList;
-    _controller =
-        VideoPlayerController.file(File(videoList[currentIndex]))
-          ..initialize().then((_) {
-            // Ensure the first frame is shown after the video is initialized, even before the play button has been pressed.
-            setState(() {});
-          });
+    _controller = VideoPlayerController.file(File(videoList[currentIndex]))
+      ..initialize().then((_) {
+        // Ensure the first frame is shown after the video is initialized, even before the play button has been pressed.
+        setState(() {});
+      });
+
+    _controller.addListener(() {
+      setState(() {});
+    });
   }
 
   @override

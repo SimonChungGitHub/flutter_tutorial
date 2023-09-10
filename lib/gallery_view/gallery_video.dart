@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_tutorial/gallery_view/pick_images.dart';
 import 'package:flutter_tutorial/gallery_view/view_video.dart';
+import 'package:video_thumbnail/video_thumbnail.dart';
 
 import '../example/custom_video_player.dart';
 import '../utils.dart';
@@ -148,8 +149,7 @@ class _VideoViewState extends State<VideoView> {
                 child: ClipRRect(
                   ///是 ClipRRect，不是 ClipRect
                   borderRadius: BorderRadius.circular(5),
-                  child: Image.file(
-                    File(videoList[index]),
+                  child: Image.file(File(videoList[index]),
                     fit: BoxFit.fill,
                     alignment: Alignment.topCenter,
                   ),
@@ -159,4 +159,34 @@ class _VideoViewState extends State<VideoView> {
       ),
     );
   }
+
+  createVideoThumbnail(File file) async {
+    return await VideoThumbnail.thumbnailData(
+      video: file.path,
+      imageFormat: ImageFormat.JPEG,
+      quality: 25,
+    );
+
+    // final fileName = await VideoThumbnail.thumbnailFile(
+    //   video: "https://flutter.github.io/assets-for-api-docs/assets/videos/butterfly.mp4",
+    //   thumbnailPath: (await getTemporaryDirectory()).path,
+    //   imageFormat: ImageFormat.WEBP,
+    //   maxHeight: 64, // specify the height of the thumbnail, let the width auto-scaled to keep the source aspect ratio
+    //   quality: 75,
+    // );
+    //
+    //
+    //
+    //
+    //
+    // final tempDir = await getTemporaryDirectory();
+    // File file2 = await File('${tempDir.path}/thumbnail.jpg').create();
+    // file2.writeAsBytesSync(unit8File as List<int>);
+    // return Image.file(file2);
+  }
+
+
+
+
+
 }

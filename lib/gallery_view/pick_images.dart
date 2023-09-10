@@ -83,7 +83,7 @@ class _PickImagesState extends State<PickImages> {
             ),
             onPressed: () async {
               bool? result = await showAlertDialogWithButton(
-                  context, Icons.delete, '選取的照片將被刪除');
+                  context, Icons.delete, '選取的照片/影片將被刪除');
               if (result!) {
                 setState(() {
                   List<PickImage> list = [];
