@@ -4,7 +4,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_tutorial/gallery_view/pick_images.dart';
-import 'package:flutter_tutorial/gallery_view/view_photo.dart';
+import 'package:flutter_tutorial/gallery_view/view_image.dart';
 import 'package:photo_view/photo_view.dart';
 import 'package:photo_view/photo_view_gallery.dart';
 

@@ -1,6 +1,8 @@
 import 'dart:io';
 
+import 'package:audioplayers/audioplayers.dart';
 import 'package:dio/dio.dart';
+import 'package:external_path/external_path.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_tutorial/device_info.dart';
 import 'package:flutter_tutorial/example/custom_camera.dart';
@@ -11,15 +13,18 @@ import 'package:image/image.dart' as img;
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 import 'package:nfc_manager/nfc_manager.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:sn_progress_dialog/progress_dialog.dart';
 import 'package:yaml/yaml.dart';
 
 import 'CustomDropdownButton2.dart';
 import 'config.dart';
 import 'example/animation.dart';
+import 'example/custom_video_player.dart';
 import 'example/date_time_picker.dart';
 import 'example/dialog.dart';
-import 'gallery_view/gallery_view.dart';
+import 'gallery_view/gallery_image.dart';
+import 'gallery_view/gallery_video.dart';
 import 'global_data.dart';
 
 void main() async {
@@ -183,6 +188,19 @@ class _HomeState extends State<Home> {
               },
             ),
             IconButton(
+                tooltip: '錄影',
+                icon: const Icon(
+                  Icons.videocam,
+                ),
+                onPressed: () async {
+                  setState(() {
+                    Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (context) => const CustomVideoPlayer()));
+                  });
+                }),
+            IconButton(
                 tooltip: '相簿',
                 icon: const Icon(
                   Icons.photo,
@@ -193,6 +211,19 @@ class _HomeState extends State<Home> {
                         context,
                         MaterialPageRoute(
                             builder: (context) => const GalleryView()));
+                  });
+                }),
+            IconButton(
+                tooltip: '影片',
+                icon: const Icon(
+                  Icons.video_collection,
+                ),
+                onPressed: () async {
+                  setState(() {
+                    Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (context) => const VideoView()));
                   });
                 }),
             PopupMenuButton<Text>(itemBuilder: (context) {
@@ -303,34 +334,41 @@ class _HomeState extends State<Home> {
                     await dirList();
                   }),
             ]),
+            ElevatedButton(
+                child: const Text('張清芳 為愛落淚'),
+                onPressed: () async {
+                  String path =
+                      await ExternalPath.getExternalStoragePublicDirectory(
+                          ExternalPath.DIRECTORY_MUSIC);
+                  path = '$path${Platform.pathSeparator}';
+
+                  // path = await ExternalPath.getExternalStoragePublicDirectory(
+                  //     ExternalPath.DIRECTORY_MUSIC);
+
+                  Stream<FileSystemEntity> list = Directory(path).list();
+                  List<String> files = [];
+                  await for (FileSystemEntity entity in list) {
+                    debugPrint('\u001b[31m ${entity.toString()} \u001b[0m');
+                    // if (entity.path.endsWith('jpg')) files.add(entity.path);
+                  }
+                  files.sort();
+
+                  // for(Directory d in aa!) {
+                  //   debugPrint('=============${aa.toString()} ===========================');
+                  // }
+
+                  // var aa= await getExternalStorageDirectory();
+                  // debugPrint('=============${aa.toString()} ===========================');
+
+                  final player = AudioPlayer();
+                  if (player.state != PlayerState.playing) {
+                    await player.play(AssetSource('11.mp3'));
+                  }
+                  // await player.play(DeviceFileSource('localFile'));
+                  // await player.release();
+                }),
           ],
         ));
-  }
-
-  Widget _watermarkItem() {
-    return Padding(
-      padding: const EdgeInsets.all(10),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            DateTime.now().toString(),
-            style: const TextStyle(color: Colors.black, fontSize: 15),
-          ),
-          const SizedBox(height: 5),
-          const Text(
-            "Made By Stamp Image",
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
-            style: TextStyle(
-              color: Colors.blue,
-              fontWeight: FontWeight.bold,
-              fontSize: 15,
-            ),
-          ),
-        ],
-      ),
-    );
   }
 
   Future<File> _buildImage(file) async {
@@ -341,34 +379,6 @@ class _HomeState extends State<Home> {
     File(newPath).writeAsBytesSync(img.encodePng(destImg));
     File newFile = File(newPath);
     return newFile;
-  }
-
-  Future<void> _dioUpload() async {
-    try {
-      // if (image == null) return;
-      var dio = Dio();
-      ProgressDialog pd = ProgressDialog(context: context);
-      pd.show(max: 100, msg: '檔案上傳中 請稍後');
-      FormData formData = FormData.fromMap(
-          {"dept": "temp", "file": await MultipartFile.fromFile(image!.path)});
-      final response = await dio.post(
-        fileUploadURL,
-        data: formData,
-        onSendProgress: (int sent, int total) {
-          int progress = (((sent / total) * 100).toInt());
-          pd.update(value: progress);
-        },
-      );
-      bool result = bool.parse(response.data.toString());
-      if (result && image != null) {
-        File(image!.path).deleteSync();
-        image = null;
-        setState(() {});
-      }
-      debugPrint('\u001b[31m ${response.data.toString()} \u001b[0m');
-    } catch (e) {
-      debugPrint('\u001b[31m $e \u001b[0m');
-    }
   }
 
   Widget drawerWidget() {
